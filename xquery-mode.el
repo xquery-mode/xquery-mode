@@ -512,6 +512,15 @@ and a debug expression."
                            (looking-at
                              "^\\s-*\\(define\\|declare\\)\\s-+function\\s-+")))
                         xquery-indent-size)
+
+                      ;; Close paren at start of line is usually the end of
+                      ;; a list of function parameters. Leave it at the beginning
+                      ;; of the line
+                      ((save-excursion
+                         (beginning-of-line)
+                         (looking-at "^)"))
+                       0)
+
                                         ; default - use paren-level-bol
                       (t (* xquery-indent-size
                                         ; special when simply closing 1 level
