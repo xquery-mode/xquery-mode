@@ -521,6 +521,15 @@ and a debug expression."
                          (looking-at "^)"))
                        0)
 
+                      ;; Open or close curly brace at the beginning of a line
+                      ;; is a block start or end. Leave it at the beginning of
+                      ;; the line.
+                      ((save-excursion
+                         (beginning-of-line)
+                         (or (looking-at "^{")
+                             (looking-at "^}")))
+                       0)
+
                                         ; default - use paren-level-bol
                       (t (* xquery-indent-size
                                         ; special when simply closing 1 level
