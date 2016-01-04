@@ -530,6 +530,54 @@ and a debug expression."
                              (looking-at "^}")))
                        0)
 
+                      ;; Indent else
+                      ((save-excursion
+                         (beginning-of-line)
+                         (looking-at "^\\s-*else\\s-*"))
+                       (save-excursion
+                         (search-backward "then")
+                         (current-column)))
+
+                      ;; Indent after else
+                      ((save-excursion
+                         (beginning-of-line)
+                         (previous-line)
+                         (looking-at "^\\s-*else\\s-*"))
+                       (save-excursion
+                         (beginning-of-line)
+                         (previous-line)
+                         (search-forward "else")
+                         (+ (- (current-column) 4) xquery-indent-size)))
+
+                      ;; Indent up to if
+                      ((save-excursion
+                         (beginning-of-line)
+                         (previous-line)
+                           (looking-at "^\\s-*if\\s-*\("))
+                       (save-excursion
+                         (beginning-of-line)
+                         (previous-line)
+                         (search-forward "if")
+                         (- (current-column) 2)))
+
+                      ;; Indent after then
+                      ((save-excursion
+                         (beginning-of-line)
+                         (previous-line)
+                           (looking-at "^\\s-*then\\s-*"))
+                       (save-excursion
+                         (beginning-of-line)
+                         (previous-line)
+                         (search-forward "then")
+                         (+ (- (current-column) 4) xquery-indent-size)))
+
+                      ;; Indent after return
+                      ((save-excursion
+                         (beginning-of-line)
+                         (previous-line)
+                           (looking-at "^\\s-*return\\s-*"))
+                       xquery-indent-size)
+
                                         ; default - use paren-level-bol
                       (t (* xquery-indent-size
                                         ; special when simply closing 1 level
