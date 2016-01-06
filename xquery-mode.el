@@ -576,7 +576,22 @@ and a debug expression."
                          (beginning-of-line)
                          (previous-line)
                            (looking-at "^\\s-*return\\s-*"))
-                       xquery-indent-size)
+                       (save-excursion
+                         (beginning-of-line)
+                         (previous-line)
+                         (search-forward "return")
+                         (+ (- (current-column) 6) xquery-indent-size)))
+
+                      ;; Indent up to let
+                      ((save-excursion
+                         (beginning-of-line)
+                         (previous-line)
+                           (looking-at "^\\s-*let\\s-*"))
+                       (save-excursion
+                         (beginning-of-line)
+                         (previous-line)
+                         (search-forward "let")
+                         (- (current-column) 3)))
 
                                         ; default - use paren-level-bol
                       (t (* xquery-indent-size
