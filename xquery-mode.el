@@ -1,8 +1,7 @@
 ;;; xquery-mode.el --- A simple mode for editing xquery programs
-;; Time-stamp: <2010-08-10 12:15:14 mblakele>
 
-;;; Copyright (C) 2005 Suraj Acharya
-;;; Copyright (C) 2006-2012 Michael Blakeley
+;; Copyright (C) 2005 Suraj Acharya
+;; Copyright (C) 2006-2012 Michael Blakeley
 
 ;; Authors:
 ;;   Suraj Acharya <sacharya@cs.indiana.edu>
@@ -26,44 +25,36 @@
 ;; Boston, MA 02111-1307, USA.
 
 ;;; Commentary:
-;;;
 
+;;; Code:
 
-;;; History:
-;;
-;; 2011-10-08 mostly rewritten, knows about some MarkLogic extensions
-;;
-;; 2005-03-26 release by sacharya
-;;   to http://www.emacswiki.org/cgi-bin/wiki/xquery-mode.el
-;;
+;; TODO: customizable group
+;; TODO: 'if()' is highlighted as a function
+;; TODO: requiring nxml-mode excludes XEmacs - just for colors?
+;; TODO: test using featurep 'xemacs
+;; TODO use nxml for element completion?
 
 (require 'font-lock)
-
-;; TODO 'if()' is highlighted as a function
-
-;; TODO requiring nxml-mode excludes XEmacs - just for colors?
-;; TODO test using featurep 'xemacs
 (require 'nxml-mode)
-
-;; TODO use nxml for element completion?
 
 (define-generic-mode 'xquery-mode
   '()
   '()
-  '() ;font-lock-list
-  '(".xq\\'") ;auto-mode-list
-  '(xquery-set-indent-function nil) ;function list
+  '()
+  '(".xq\\'")
+  '(xquery-set-indent-function nil)
   "A Major mode for editing xquery.")
 
-;; customization hook
 (defcustom xquery-mode-hook nil
   "Hook run after entering XQuery mode."
   :type 'hook
   :options '(turn-on-xquery-indent turn-on-font-lock))
 
-(defvar xquery-toplevel-bovine-table nil "Top level bovinator table")
+(defvar xquery-toplevel-bovine-table nil
+  "Top level bovinator table.")
 
-(defvar xquery-mode-syntax-table () "Syntax table for xquery-mode")
+(defvar xquery-mode-syntax-table ()
+  "Syntax table for xquery-mode.")
 
 (setq xquery-mode-syntax-table
   (let ((xquery-mode-syntax-table (make-syntax-table)))
@@ -94,30 +85,21 @@
     (modify-syntax-entry ?\) ")(4n" xquery-mode-syntax-table)
     xquery-mode-syntax-table))
 
-(defvar xquery-mode-keywords () "Keywords for xquery-mode")
+(defvar xquery-mode-keywords ()
+  "Keywords for xquery-mode.")
 
 (defvar xquery-mode-comment-start "(: "
   "String used to start an XQuery mode comment.")
-;;(make-local-variable 'comment-start)
-
 
 (defvar xquery-mode-comment-end " :)"
   "String used to end an XQuery mode comment.")
 
-
 (defvar xquery-mode-comment-fill ":"
   "String used to fill an XQuery mode comment.")
-
 
 (defvar xquery-mode-comment-start-skip "(:\\s-+"
   "Regexp to match an XQuery mode comment and any following whitespace.")
 
-
-;; NOTE - derived-mode will automatically copy some vars
-;;   xquery-map as keymap
-;;   xquery-syntax-table as syntax-table
-;;   xquery-abbrev-table as abbrev-table
-;;   xquery-hook as initialization hook
 ;;;###autoload
 (define-derived-mode xquery-mode fundamental-mode "XQuery"
   "A major mode for W3C XQuery 1.0"
@@ -129,11 +111,10 @@
   (set (make-local-variable 'comment-start) xquery-mode-comment-start)
   (set (make-local-variable 'comment-end) xquery-mode-comment-end)
   (set (make-local-variable 'comment-fill)  xquery-mode-comment-fill)
-  (set (make-local-variable 'comment-start-skip) xquery-mode-comment-start-skip)
-  )
+  (set (make-local-variable 'comment-start-skip) xquery-mode-comment-start-skip))
 
 ;; XQuery doesn't have keywords, but these usually work...
-;; TODO remove as many as possible, in favor of parsing
+;; TODO: remove as many as possible, in favor of parsing
 (setq xquery-mode-keywords
   (list
     ;; FLWOR
@@ -159,11 +140,11 @@
     "intersect" "union" "except" "to"
     "is" "eq" "ne" "gt" "ge" "lt" "le"
     "or" "and"
-    "div" "idiv" "mod"
-    ))
+    "div" "idiv" "mod"))
 
 ;; to match only word-boundaries, we turn the keywords into a big regex
-(defvar xquery-mode-keywords-regex () "Keywords regex for xquery mode")
+(defvar xquery-mode-keywords-regex ()
+  "Keywords regex for xquery mode.")
 
 ;; transform the list of keywords into regex
 ;; check for word-boundaries instead of whitespace
@@ -176,16 +157,18 @@
               xquery-mode-keywords "\\|"))
     "\\)\\b"))
 
-;;(message xquery-mode-keywords-regex)
-
 ;; XQuery syntax - TODO build a real parser
-(defvar xquery-mode-ncname () "NCName regex, in 1 group")
+(defvar xquery-mode-ncname ()
+  "NCName regex, in 1 group.")
+
 (setq xquery-mode-ncname "\\(\\sw[-_\\.[:word:]]*\\)")
 
 ;; highlighting needs a group, even if it's "" - so use (...?) not (...)?
 ;; note that this technique treats the local-name as optional,
 ;; when the prefix should be the optional part.
-(defvar xquery-mode-qname () "QName regex, in 3 groups")
+(defvar xquery-mode-qname ()
+  "QName regex, in 3 groups.")
+
 (setq xquery-mode-qname
   (concat
     xquery-mode-ncname "\\(:?\\)" "\\(" xquery-mode-ncname "?\\)"))
@@ -307,16 +290,14 @@
      ;;
      ;; highlighting pseudo-keywords - must be late, for problems like 'if ()'
      ;;
-     (,xquery-mode-keywords-regex (1 font-lock-keyword-face))
-     ))
+     (,xquery-mode-keywords-regex (1 font-lock-keyword-face))))
 
-;; file-extension mappings
 ;;;###autoload
 (add-to-list 'auto-mode-alist '(".xq[erxy]\\'" . xquery-mode))
 
 (defun xquery-forward-sexp (&optional arg)
   "XQuery forward s-expresssion.
-This function is not very smart. It tries to use
+This function is not very smart.  It tries to use
 `nxml-forward-balanced-item' if it sees '>' or '<' characters in
 the current line (ARG), and uses the regular `forward-sexp'
 otherwise."
@@ -329,14 +310,10 @@ otherwise."
       (nxml-forward-balanced-item arg)
       (let ((forward-sexp-function nil)) (forward-sexp arg)))))
 
-;; indentation
-(defvar xquery-indent-size tab-width "The size of each indent level.")
-
-;; (setq debug-on-error t) ;\ DEBUG ::)
+(defvar xquery-indent-size tab-width
+  "The size of each indent level.")
 
 (defvar xquery-indent-debug nil)
-
-;; (setq xquery-indent-debug t) ;\ DEBUG ::)
 
 (defun xquery-toggle-debug-indent ()
   "Toggle the debug flag used in `xquery-calculate-indentation'."
@@ -347,7 +324,8 @@ otherwise."
 
 (defun xquery-indent-debug-toggle ()
   "Toggle the debug flag used in `xquery-calculate-indentation'."
-  (interactive) (xquery-toggle-debug-indent))
+  (interactive)
+  (xquery-toggle-debug-indent))
 
 (defun xquery-indent-debug-message (results)
   "Utility function to display debug messages for indentation.
@@ -401,7 +379,6 @@ and a debug expression."
   (save-excursion
     (beginning-of-line)
     (cond
-
       ;; TODO this sort of works, but needs to set some state
       ;; TODO once we have state, how and when do we reset it?
       ;;      ((save-excursion
@@ -470,8 +447,7 @@ and a debug expression."
                 ;; later we will multiple by xquery-indent-size
                 (nxml-indent
                   (if results-nxml
-                    (/ (car results-nxml) xquery-indent-size)))
-                )
+                    (/ (car results-nxml) xquery-indent-size))))
           (if xquery-indent-debug
             (progn
               (message "point-bol = %S" point-bol)
