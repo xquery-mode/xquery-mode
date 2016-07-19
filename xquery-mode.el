@@ -48,6 +48,21 @@
   "Turn on native XQuery-mode indentation."
   (define-key xquery-mode-map (kbd "TAB") 'indent-for-tab-command))
 
+(defun toggle-xquery-mode-indent-style ()
+  "Switch to the next indentation style."
+  (interactive)
+  (if (eq xquery-mode-indent-style 'tab-to-tab)
+      (setq xquery-mode-indent-style 'native)
+    (setq xquery-mode-indent-style 'tab-to-tab))
+  (xquery-mode-activate-indent-style))
+
+(defun xquery-mode-activate-indent-style ()
+  "Activate current indentation style."
+  (cond ((eq xquery-mode-indent-style 'tab-to-tab)
+         (turn-on-xquery-tab-to-tab-indent))
+        ((eq xquery-mode-indent-style 'native)
+         (turn-on-xquery-native-indent))))
+
 (define-generic-mode 'xquery-mode
   '()
   '()
@@ -133,11 +148,8 @@
   :type '(choice (const :tag "Tab to tab" tab-to-tab)
                  (const :tag "Native" native))
   :set (lambda (var key)
-         (cond ((eq key 'tab-to-tab)
-                (turn-on-xquery-tab-to-tab-indent))
-               ((eq key 'native)
-                (turn-on-xquery-native-indent)))
-         (set var key)))
+         (set var key)
+         (xquery-mode-activate-indent-style)))
 
 ;; XQuery doesn't have keywords, but these usually work...
 ;; TODO: remove as many as possible, in favor of parsing
