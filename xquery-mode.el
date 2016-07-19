@@ -28,7 +28,6 @@
 
 ;;; Code:
 
-;; TODO: customizable group
 ;; TODO: 'if()' is highlighted as a function
 ;; TODO: requiring nxml-mode excludes XEmacs - just for colors?
 ;; TODO: test using featurep 'xemacs
@@ -36,6 +35,18 @@
 
 (require 'font-lock)
 (require 'nxml-mode)
+
+(defgroup xquery-mode nil
+  "Major mode for XQuery files editing."
+  :group 'languages)
+
+(defun turn-on-xquery-tab-to-tab-indent ()
+  "Turn on tab-to-tab XQuery-mode indentation."
+  (define-key xquery-mode-map (kbd "TAB") 'tab-to-tab-stop))
+
+(defun turn-on-xquery-native-indent ()
+  "Turn on native XQuery-mode indentation."
+  (define-key xquery-mode-map (kbd "TAB") 'indent-for-tab-command))
 
 (define-generic-mode 'xquery-mode
   '()
@@ -112,6 +123,21 @@
   (set (make-local-variable 'comment-end) xquery-mode-comment-end)
   (set (make-local-variable 'comment-fill)  xquery-mode-comment-fill)
   (set (make-local-variable 'comment-start-skip) xquery-mode-comment-start-skip))
+
+;; TODO: move it upper.
+(defcustom xquery-mode-indent-style 'tab-to-tab
+  "Indentation behavior.
+`tab-to-tab' to use `tab-to-tab-stop' indent function
+`native' to use own indentation engine"
+  :group 'xquery-mode
+  :type '(choice (const :tag "Tab to tab" tab-to-tab)
+                 (const :tag "Native" native))
+  :set (lambda (var key)
+         (cond ((eq key 'tab-to-tab)
+                (turn-on-xquery-tab-to-tab-indent))
+               ((eq key 'native)
+                (turn-on-xquery-native-indent)))
+         (set var key)))
 
 ;; XQuery doesn't have keywords, but these usually work...
 ;; TODO: remove as many as possible, in favor of parsing
