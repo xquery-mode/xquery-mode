@@ -6,6 +6,8 @@
 ;; Authors:
 ;;   Suraj Acharya <sacharya@cs.indiana.edu>
 ;;   Michael Blakeley <mike@blakeley.com>
+;; URL: https://github.com/xquery-mode/xquery-mode
+;; Version: 0.1.0
 
 ;; This file is not part of GNU Emacs.
 
