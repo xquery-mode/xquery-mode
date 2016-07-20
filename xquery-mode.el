@@ -132,6 +132,7 @@
 (define-derived-mode xquery-mode fundamental-mode "XQuery"
   "A major mode for W3C XQuery 1.0"
   ;; indentation
+  (setq tab-width xquery-mode-indent-width)
   (set (make-local-variable 'indent-line-function) 'xquery-indent-line)
   ;; apparently it's important to set at least an empty list up-front
   (set (make-local-variable 'font-lock-defaults)
@@ -152,6 +153,11 @@
   :set (lambda (var key)
          (set var key)
          (xquery-mode-activate-indent-style)))
+
+(defcustom xquery-mode-indent-width 2
+  "Indent width for `xquery-mode'."
+  :group 'xquery-mode
+  :type 'integer)
 
 ;; XQuery doesn't have keywords, but these usually work...
 ;; TODO: remove as many as possible, in favor of parsing
