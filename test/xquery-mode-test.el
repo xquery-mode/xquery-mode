@@ -120,6 +120,24 @@ return
   let $group-tpi := local:get-provider-group-membership()
 ")
 
+(define-indent-test flwor-multiline-if ()
+  "Indent multiline if statement."
+  "
+return
+let $mpf-tin := if ($mpf-group)
+then
+$mpf-group/provider-tax-id[1]/irs-number/text()
+else
+$mpf-provider/provider-tax-id[1]/irs-number/text()
+" "
+return
+  let $mpf-tin := if ($mpf-group)
+                  then
+                    $mpf-group/provider-tax-id[1]/irs-number/text()
+                  else
+                    $mpf-provider/provider-tax-id[1]/irs-number/text()
+")
+
 (provide 'xquery-mode-test)
 
 ;;; xquery-mode-test.el ends here
