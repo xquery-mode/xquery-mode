@@ -68,6 +68,18 @@ baz
   baz
 </foo>")
 
+(define-indent-test flwor-expression-open-bracket ()
+  "Indent FLWOR open curly bracket one level dipper."
+  "
+<tbody>
+{
+	for $tpi in fn:subsequence()
+" "
+<tbody>
+  {
+    for $tpi in fn:subsequence()
+")
+
 (provide 'xquery-mode-test)
 
 ;;; xquery-mode-test.el ends here
