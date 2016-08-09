@@ -58,6 +58,16 @@ return $group-membership)[1]
 <style type=\"text/css\">
 ")
 
+(define-indent-test xml-tag-value ()
+  "Indent XML tag value differ then opening tag."
+  "
+<foo>
+baz
+</foo>" "
+<foo>
+  baz
+</foo>")
+
 (provide 'xquery-mode-test)
 
 ;;; xquery-mode-test.el ends here
