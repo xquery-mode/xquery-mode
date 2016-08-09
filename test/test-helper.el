@@ -18,7 +18,7 @@
 (defmacro define-indent-test (testname args doc before after)
   "Generate `ert' test for indentation."
   (declare (indent 2))
-  `(ert-deftest ,testname ,args
+  `(ert-deftest ,(intern (concat "test-xquery-mode-" (symbol-name testname))) ,args
      ,doc
      (with-current-buffer (generate-new-buffer "*fixture*")
        (insert ,before)
