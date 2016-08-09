@@ -36,6 +36,18 @@ order by $group-membership/group-membership-effective-date descending
 return $group-membership)[1]
 ")
 
+(define-indent-test inner-xml-tag ()
+  "Inner XML tags should indent with nesting."
+  "
+<html>
+<head>
+<title>Access points with an Organization TPI</title>
+" "
+<html>
+  <head>
+    <title>Access points with an Organization TPI</title>
+")
+
 (provide 'xquery-mode-test)
 
 ;;; xquery-mode-test.el ends here
