@@ -108,6 +108,18 @@ baz
   order by $provider-id/id
 ")
 
+(define-indent-test flwor-return-let-let-nested ()
+  "Indent let statement nested into return statement with dipper column."
+  "
+return
+let $mpf-provider := doc()/provider
+let $group-tpi := local:get-provider-group-membership()
+" "
+return
+  let $mpf-provider := doc()/provider
+  let $group-tpi := local:get-provider-group-membership()
+")
+
 (provide 'xquery-mode-test)
 
 ;;; xquery-mode-test.el ends here
