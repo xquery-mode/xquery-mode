@@ -80,6 +80,20 @@ baz
     for $tpi in fn:subsequence()
 ")
 
+(define-indent-test flwor-for-let-let-sequential ()
+  "Indent for let lest sequential expression to same column."
+  "
+{
+	for $tpi in fn:subsequence()
+	let $provider-id := $tpi/../../provider
+	let $facility := $tpi/../../..
+" "
+{
+  for $tpi in fn:subsequence()
+  let $provider-id := $tpi/../../provider
+  let $facility := $tpi/../../..
+")
+
 (provide 'xquery-mode-test)
 
 ;;; xquery-mode-test.el ends here
