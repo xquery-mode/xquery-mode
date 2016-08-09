@@ -48,6 +48,16 @@ return $group-membership)[1]
     <title>Access points with an Organization TPI</title>
 ")
 
+(define-indent-test sequential-xml-tag ()
+  "Sequential XML tags must have same indentation column."
+  "
+<title>Access points with an Organization TPI</title>
+<style type=\"text/css\">
+" "
+<title>Access points with an Organization TPI</title>
+<style type=\"text/css\">
+")
+
 (provide 'xquery-mode-test)
 
 ;;; xquery-mode-test.el ends here
