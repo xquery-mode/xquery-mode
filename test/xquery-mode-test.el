@@ -138,6 +138,27 @@ return
                     $mpf-provider/provider-tax-id[1]/irs-number/text()
 ")
 
+(define-indent-test flwor-let-where-or-return ()
+  "Indent sequential let where return statements on same line.
+If where statement have multiline condition expression indent it dipper."
+   "
+let $mpf-tin := if ($mpf-group) then $mpf-group/provider-tax-id[1]/irs-number/text() else $mpf-provider/provider-tax-id[1]/irs-number/text()
+where $facility-npi != $mpf-facility-npi
+or $facility-tin != $mpf-tin
+or $provider-npi != $mpf-provider-npi
+or $name-classification != 'I' or not($mpf-provider-name)
+return
+<tr>
+" "
+let $mpf-tin := if ($mpf-group) then $mpf-group/provider-tax-id[1]/irs-number/text() else $mpf-provider/provider-tax-id[1]/irs-number/text()
+where $facility-npi != $mpf-facility-npi
+      or $facility-tin != $mpf-tin
+      or $provider-npi != $mpf-provider-npi
+      or $name-classification != 'I' or not($mpf-provider-name)
+return
+  <tr>
+")
+
 (provide 'xquery-mode-test)
 
 ;;; xquery-mode-test.el ends here
