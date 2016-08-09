@@ -94,6 +94,20 @@ baz
   let $facility := $tpi/../../..
 ")
 
+(define-indent-test flwor-let-order-by-sequential ()
+  "Indent sequential let order by statements to the same column."
+  "
+{
+	for $tpi in fn:subsequence()
+	let $provider-id := $tpi/../../provider
+	order by $provider-id/id
+" "
+{
+  for $tpi in fn:subsequence()
+  let $provider-id := $tpi/../../provider
+  order by $provider-id/id
+")
+
 (provide 'xquery-mode-test)
 
 ;;; xquery-mode-test.el ends here
