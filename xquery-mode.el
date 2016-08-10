@@ -65,14 +65,6 @@
         ((eq xquery-mode-indent-style 'native)
          (turn-on-xquery-native-indent))))
 
-(define-generic-mode 'xquery-mode
-  '()
-  '()
-  '()
-  '(".xq\\'")
-  '(xquery-set-indent-function nil)
-  "A Major mode for editing xquery.")
-
 (defcustom xquery-mode-hook nil
   "Hook run after entering XQuery mode."
   :type 'hook
@@ -104,11 +96,7 @@
         (modify-syntax-entry ?\} "){" xquery-mode-syntax-table)
         (modify-syntax-entry ?\[ "(]" xquery-mode-syntax-table)
         (modify-syntax-entry ?\] ")]" xquery-mode-syntax-table)
-        ;;(modify-syntax-entry ?\< "(" xquery-mode-syntax-table)
-        ;;(modify-syntax-entry ?\> ")" xquery-mode-syntax-table)
         ;; parens may indicate a comment, or may be a sequence
-        ;; note that (: will balance ), ( will balance ::), etc.
-        ;; note 'n' for comment nesting
         (modify-syntax-entry ?\( "()1n" xquery-mode-syntax-table)
         (modify-syntax-entry ?\) ")(4n" xquery-mode-syntax-table)
         xquery-mode-syntax-table))
@@ -132,11 +120,11 @@
 (define-derived-mode xquery-mode fundamental-mode "XQuery"
   "A major mode for W3C XQuery 1.0"
   ;; indentation
+  (xquery-set-indent-function)
   (setq tab-width xquery-mode-indent-width)
   (set (make-local-variable 'indent-line-function) 'xquery-indent-line)
   ;; apparently it's important to set at least an empty list up-front
-  (set (make-local-variable 'font-lock-defaults)
-       (list (list ())))
+  (set (make-local-variable 'font-lock-defaults) '((nil)))
   (set (make-local-variable 'comment-start) xquery-mode-comment-start)
   (set (make-local-variable 'comment-end) xquery-mode-comment-end)
   (set (make-local-variable 'comment-fill)  xquery-mode-comment-fill)
@@ -188,36 +176,34 @@
        "or" "and"
        "div" "idiv" "mod"))
 
-;; to match only word-boundaries, we turn the keywords into a big regex
-(defvar xquery-mode-keywords-regex ()
+(defvar xquery-mode-keywords-regex
+  (concat "\\b\\("
+          (mapconcat
+           (function
+            (lambda (r)
+              (if (string-match "[ \t]+" r)
+                  (replace-match "[ \t]+" nil t r)
+                r)))
+           xquery-mode-keywords
+           "\\|")
+          "\\)\\b")
   "Keywords regex for xquery mode.")
 
-;; transform the list of keywords into regex
-;; check for word-boundaries instead of whitespace
-(setq xquery-mode-keywords-regex
-      (concat (concat "\\b\\("
-                      (mapconcat
-                       (function (lambda (r)
-                                   (if (string-match "[ \t]+" r)
-                                       (replace-match "[ \t]+" nil t r) r)))
-                       xquery-mode-keywords "\\|"))
-              "\\)\\b"))
-
 ;; XQuery syntax - TODO build a real parser
-(defvar xquery-mode-ncname ()
+(defvar xquery-mode-ncname "\\(\\sw[-_\\.[:word:]]*\\)"
   "NCName regex, in 1 group.")
-
-(setq xquery-mode-ncname "\\(\\sw[-_\\.[:word:]]*\\)")
 
 ;; highlighting needs a group, even if it's "" - so use (...?) not (...)?
 ;; note that this technique treats the local-name as optional,
 ;; when the prefix should be the optional part.
-(defvar xquery-mode-qname ()
+(defvar xquery-mode-qname
+  (concat
+   xquery-mode-ncname
+   "\\(:?\\)"
+   "\\("
+   xquery-mode-ncname
+   "?\\)")
   "QName regex, in 3 groups.")
-
-(setq xquery-mode-qname
-      (concat
-       xquery-mode-ncname "\\(:?\\)" "\\(" xquery-mode-ncname "?\\)"))
 
 ;; highlighting
 ;; these are "matcher . highlighter" forms
@@ -279,7 +265,7 @@
       "(?\\s-*\\(" xquery-mode-qname "\\)?\\s-*)?")
     (1 font-lock-keyword-face)
     (2 font-lock-type-face)
-                                        ; TODO the second qname never matches
+    ;; TODO the second qname never matches
     (3 font-lock-type-face))
    ;; function call
    (,(concat "\\(" xquery-mode-qname "\\)(")
@@ -313,13 +299,6 @@
     (3 'nxml-element-colon-face)
     (4 'nxml-element-local-name-face))
    ;; TODO xml attribute or xmlns decl
-   ;;    (,(concat xquery-mode-qname "=\\([\"']\\)\\(.*?\\)\\([\"']\\)")
-   ;;     (1 'nxml-attribute-prefix-face)
-   ;;     (2 'nxml-attribute-colon-face)
-   ;;     (3 'nxml-attribute-local-name-face)
-   ;;     (4 'nxml-attribute-value-delimiter-face)
-   ;;     (5 'nxml-attribute-value-face)
-   ;;     (6 'nxml-attribute-value-delimiter-face))
    ;; xml comments
    ("\\(<!--\\)\\([^-]*\\)\\(-->\\)"
     (1 'nxml-comment-delimiter-face)
@@ -359,28 +338,6 @@ otherwise."
 (defvar xquery-indent-size tab-width
   "The size of each indent level.")
 
-(defvar xquery-indent-debug nil)
-
-(defun xquery-toggle-debug-indent ()
-  "Toggle the debug flag used in `xquery-calculate-indentation'."
-  (interactive)
-  (setq xquery-indent-debug (not xquery-indent-debug))
-  (message "xquery-indent-debug is %sabled"
-           (if xquery-indent-debug "en" "dis")))
-
-(defun xquery-indent-debug-toggle ()
-  "Toggle the debug flag used in `xquery-calculate-indentation'."
-  (interactive)
-  (xquery-toggle-debug-indent))
-
-(defun xquery-indent-debug-message (results)
-  "Utility function to display debug messages for indentation.
-RESULTS must be a list of a column number and a string message."
-  (if xquery-indent-debug
-      (let ((cc (car results))
-            (msg (cdr results)))
-        (message "xquery-indent-debug: (%d) %S" cc msg)) ) )
-
 (defun xquery-set-indent-function ()
   "Set the indent function for xquery mode."
   (setq nxml-prolog-end (point-min))
@@ -394,240 +351,199 @@ RESULTS must be a list of a column number and a string message."
   "Indent current line as xquery code."
   (interactive)
   (let ((savept (> (current-column) (current-indentation)))
-        (results (xquery-calculate-indentation)))
-    (xquery-indent-debug-message results)
-    (let ( (indent (car results)) )
-      (if (> indent -1)
-          (if savept
-              (save-excursion (indent-line-to indent))
-            (indent-line-to (max 0 indent)) ) ) ) ) )
+        (indent (car (xquery-calculate-indentation))))
+    (if (> indent -1)
+        (if savept
+            (save-excursion (indent-line-to indent))
+          (indent-line-to (max 0 indent))))))
 
 (defun xquery-indent-via-nxml ()
-  "This function uses nxml to calculate the indentation."
+  "This function use nxml to calculate the indentation."
   (let ((nxml-prolog-end (point-min))
-        (nxml-scan-end (copy-marker (point-min) nil)) )
-    (nxml-compute-indent) ) )
+        (nxml-scan-end (copy-marker (point-min) nil)))
+    (nxml-compute-indent)))
 
-;; to make debugging easier, use setq to set the actual values
-(defvar xquery-indent-regex ""
+(defvar xquery-indent-regex
+  (concat "^\\s-*\\("
+          "typeswitch\\|for\\|let\\|where\\|order\\s-+by\\|return"
+          "\\|if\\|then\\|else"
+          "\\)\\s-*$")
   "A regular expression indicating an indentable xquery sub-expression.")
-
-(setq xquery-indent-regex
-      (concat "^\\s-*\\("
-              "typeswitch\\|for\\|let\\|where\\|order\\s-+by\\|return"
-              "\\|if\\|then\\|else"
-              "\\)\\s-*$") )
 
 (defun xquery-calculate-indentation ()
   "Calculate the indentation for a line of XQuery.
-This function returns the column to which the current line should be indented,
-and a debug expression."
+This function returns the column to which the current line should
+be indented."
   (save-excursion
     (beginning-of-line)
-    (cond
-     ;; TODO this sort of works, but needs to set some state
-     ;; TODO once we have state, how and when do we reset it?
-     ;;      ((save-excursion
-     ;;         (previous-line)
-     ;;         (message "current-word = %S" (current-word)) ; DEBUG
-     ;;         (message "looking-at xquery-indent-regex = %S"
-     ;;                  (looking-at xquery-indent-regex)) ; DEBUG
-     ;;          (looking-at xquery-indent-regex))
-     ;;       (save-excursion
-     ;;         (previous-line)
-     ;;         (list
-     ;;          (+ xquery-indent-size (current-indentation))
-     ;;          "previous line starts new block")))
-
-     ;; default, using sexp parser
-     (t
-      ;; calculate indent for beginning of line indent, then end of line
-      (let* ((point-bol (point))
-             (results-bol (parse-partial-sexp (point-min) point-bol))
-             ;; 0. depth in parens.
-             (paren-level-bol (car results-bol))
-             ;; 1. character address of start of innermost containing list.
-             (list-start-bol  (car (cdr results-bol)))
-             ;; 2. character address of start of last complete sexp.
-             (sexp-start-bol  (car (cdr (cdr results-bol))) )
-             ;; 3. non-nil if inside a string.
-             (stringp-bol     (car (cdr (cdr (cdr results-bol)))) )
-             ;; 4. nil if outside comment, t if inside non-nesting comment,
-             ;;    else integer comment nesting.
-             (comment-level-bol
-              (car (cdr (cdr (cdr (cdr results-bol))))) )
-             ;; 5. t if following a quote character.
-             (quotep-bol
-              (car (cdr (cdr (cdr (cdr (cdr results-bol)))))) )
-             ;; 6. the minimum paren-depth encountered during this scan.
-             (min-level-bol
-              (car (cdr (cdr (cdr (cdr (cdr (cdr results-bol))))))) )
-             ;; 7. t if in a comment of style b;
-             ;;    symbol 'syntax-table' if the comment is generic.
-             (bcommentp-bol
-              (car (cdr (cdr (cdr (cdr (cdr (cdr (cdr results-bol)))))))) )
-             ;; 8. character address of start of comment or string, else nil.
-             (comment-start-bol
-              (car (cdr (cdr
-                         (cdr (cdr (cdr (cdr (cdr
-                                              (cdr results-bol))))))))))
-             ;; 9. intermediate data for continuation of parsing. (not used)
-
-             (point-eol (save-excursion (end-of-line) (point)))
-             ;; undocumented, but parse-partial-sexp seems to change point
-             ;; TODO use state-bol? seems to have problems
-             (results-eol (save-excursion
-                            (parse-partial-sexp (point-min) point-eol)))
-             ;; what would nxml do?
-             (results-nxml
+    (let* ((point-bol (point))
+           (results-bol (parse-partial-sexp (point-min) point-bol))
+           ;; 0. depth in parens.
+           (paren-level-bol (car results-bol))
+           ;; 1. character address of start of innermost containing list.
+           (list-start-bol  (car (cdr results-bol)))
+           ;; 2. character address of start of last complete sexp.
+           (sexp-start-bol  (car (cdr (cdr results-bol))) )
+           ;; 3. non-nil if inside a string.
+           (stringp-bol     (car (cdr (cdr (cdr results-bol)))) )
+           ;; 4. nil if outside comment, t if inside non-nesting comment,
+           ;;    else integer comment nesting.
+           (comment-level-bol
+            (car (cdr (cdr (cdr (cdr results-bol))))) )
+           ;; 5. t if following a quote character.
+           (quotep-bol
+            (car (cdr (cdr (cdr (cdr (cdr results-bol)))))) )
+           ;; 6. the minimum paren-depth encountered during this scan.
+           (min-level-bol
+            (car (cdr (cdr (cdr (cdr (cdr (cdr results-bol))))))) )
+           ;; 7. t if in a comment of style b;
+           ;;    symbol 'syntax-table' if the comment is generic.
+           (bcommentp-bol
+            (car (cdr (cdr (cdr (cdr (cdr (cdr (cdr results-bol)))))))) )
+           ;; 8. character address of start of comment or string, else nil.
+           (comment-start-bol
+            (car (cdr (cdr
+                       (cdr (cdr (cdr (cdr (cdr
+                                            (cdr results-bol))))))))))
+           ;; 9. intermediate data for continuation of parsing. (not used)
+           (point-eol (save-excursion (end-of-line) (point)))
+           ;; undocumented, but parse-partial-sexp seems to change point
+           ;; TODO use state-bol? seems to have problems
+           (results-eol (save-excursion
+                          (parse-partial-sexp (point-min) point-eol)))
+           ;; what would nxml do?
+           (results-nxml
+            (cond
+             ((looking-at "\\s-*<!--")
+              (list (xquery-indent-via-nxml) "xml start-comment"))
+             ((looking-at "\\s-*-->")
+              (list (xquery-indent-via-nxml) "xml end-comment"))
+             ((looking-at "\\s-*<\\sw+")
+              (list (xquery-indent-via-nxml) "xml start-element"))
+             ((looking-at "\\s-*</?\\sw+")
+              (list (xquery-indent-via-nxml) "xml end-element"))
+             (t nil) ) )
+           ;; later we will multiple by xquery-indent-size
+           (nxml-indent
+            (if results-nxml
+                (/ (car results-nxml) xquery-indent-size))))
+      (let* (;; 0. depth in parens
+             (paren-level-eol (car results-eol))
+             (indent
               (cond
-               ((looking-at "\\s-*<!--")
-                (list (xquery-indent-via-nxml) "xml start-comment"))
-               ((looking-at "\\s-*-->")
-                (list (xquery-indent-via-nxml) "xml end-comment"))
-               ((looking-at "\\s-*<\\sw+")
-                (list (xquery-indent-via-nxml) "xml start-element"))
-               ((looking-at "\\s-*</?\\sw+")
-                (list (xquery-indent-via-nxml) "xml end-element"))
-               (t nil) ) )
-             ;; later we will multiple by xquery-indent-size
-             (nxml-indent
-              (if results-nxml
-                  (/ (car results-nxml) xquery-indent-size))))
-        (if xquery-indent-debug
-            (progn
-              (message "point-bol = %S" point-bol)
-              (message "point-eol = %S" point-eol)
-              (message "point = %S" (point))
-              (message "results-eol = %S" results-eol)
-              (message "results-nxml = %S" results-nxml)))
-        (let* (
-               ;; 0. depth in parens
-               (paren-level-eol (car results-eol))
-               (indent
-                (cond
-                 (comment-level-bol
-                                        ; within a multi-line comment
-                                        ; start of comment indentation + 1
-                  (+ 1 (save-excursion
-                         (goto-char comment-start-bol)
-                         (current-indentation) )) )
-                                        ; TODO multi-line prolog variable?
-                 (nil -1)
-                                        ; mult-line module import?
-                 ((and (save-excursion
-                         (beginning-of-line)
-                         (looking-at "^\\s-*at\\s-+"))
-                       (save-excursion
-                         (beginning-of-line)
-                         (previous-line)
-                         (looking-at "^\\s-*import\\s-+module\\s-+")))
-                  xquery-indent-size)
-                                        ; multi-line function decl?
-                                        ; TODO handle more than 1 line previous
-                 ((and (save-excursion
-                         (beginning-of-line)
-                         (looking-at "^\\s-*as\\s-+"))
-                       (save-excursion
-                         (beginning-of-line)
-                         (previous-line)
-                         (looking-at
-                          "^\\s-*\\(define\\|declare\\)\\s-+function\\s-+")))
-                  xquery-indent-size)
-
-                 ;; Close paren at start of line is usually the end of
-                 ;; a list of function parameters. Leave it at the beginning
-                 ;; of the line
-                 ((save-excursion
-                    (beginning-of-line)
-                    (looking-at "^)"))
-                  0)
-
-                 ;; Open or close curly brace at the beginning of a line
-                 ;; is a block start or end. Leave it at the beginning of
-                 ;; the line.
-                 ((save-excursion
-                    (beginning-of-line)
-                    (or (looking-at "^{")
-                        (looking-at "^}")))
-                  0)
-
-                 ;; Indent else
-                 ((save-excursion
-                    (beginning-of-line)
-                    (looking-at "^\\s-*else\\s-*"))
-                  (save-excursion
-                    (search-backward "then")
-                    (current-column)))
-
-                 ;; Indent after else
-                 ((save-excursion
-                    (beginning-of-line)
-                    (previous-line)
-                    (looking-at "^\\s-*else\\s-*"))
-                  (save-excursion
-                    (beginning-of-line)
-                    (previous-line)
-                    (search-forward "else")
-                    (+ (- (current-column) 4) xquery-indent-size)))
-
-                 ;; Indent up to if
-                 ((save-excursion
-                    (beginning-of-line)
-                    (previous-line)
-                    (looking-at "^\\s-*if\\s-*\("))
-                  (save-excursion
-                    (beginning-of-line)
-                    (previous-line)
-                    (search-forward "if")
-                    (- (current-column) 2)))
-
-                 ;; Indent after then
-                 ((save-excursion
-                    (beginning-of-line)
-                    (previous-line)
-                    (looking-at "^\\s-*then\\s-*"))
-                  (save-excursion
-                    (beginning-of-line)
-                    (previous-line)
-                    (search-forward "then")
-                    (+ (- (current-column) 4) xquery-indent-size)))
-
-                 ;; Indent after return
-                 ((save-excursion
-                    (beginning-of-line)
-                    (previous-line)
-                    (looking-at "^\\s-*return\\s-*"))
-                  (save-excursion
-                    (beginning-of-line)
-                    (previous-line)
-                    (search-forward "return")
-                    (+ (- (current-column) 6) xquery-indent-size)))
-
-                 ;; Indent up to let
-                 ((save-excursion
-                    (beginning-of-line)
-                    (previous-line)
-                    (looking-at "^\\s-*let\\s-*"))
-                  (save-excursion
-                    (beginning-of-line)
-                    (previous-line)
-                    (search-forward "let")
-                    (- (current-column) 3)))
-
-                                        ; default - use paren-level-bol
-                 (t (* xquery-indent-size
-                                        ; special when simply closing 1 level
-                       (cond
-                        ((and (= paren-level-bol (+ 1 paren-level-eol))
-                              (looking-at "^\\s-*\\s)[,;]?\\s-*$") )
-                         paren-level-eol)
-                                        ; factor in the nxml-indent
-                        ((and
-                          nxml-indent (> nxml-indent paren-level-bol))
-                         nxml-indent)
-                        (t paren-level-bol)))))))
-          (list (min 70 indent) results-bol results-eol)))))))
+               (comment-level-bol
+                ;; within a multi-line comment
+                ;; start of comment indentation + 1
+                (+ 1 (save-excursion
+                       (goto-char comment-start-bol)
+                       (current-indentation))))
+               ;; TODO multi-line prolog variable?
+               (nil -1)
+               ;; mult-line module import?
+               ((and (save-excursion
+                       (beginning-of-line)
+                       (looking-at "^\\s-*at\\s-+"))
+                     (save-excursion
+                       (beginning-of-line)
+                       (previous-line)
+                       (looking-at "^\\s-*import\\s-+module\\s-+")))
+                xquery-indent-size)
+               ;; multi-line function decl?
+               ;; TODO handle more than 1 line previous
+               ((and (save-excursion
+                       (beginning-of-line)
+                       (looking-at "^\\s-*as\\s-+"))
+                     (save-excursion
+                       (beginning-of-line)
+                       (previous-line)
+                       (looking-at
+                        "^\\s-*\\(define\\|declare\\)\\s-+function\\s-+")))
+                xquery-indent-size)
+               ;; Close paren at start of line is usually the end of
+               ;; a list of function parameters. Leave it at the beginning
+               ;; of the line
+               ((save-excursion
+                  (beginning-of-line)
+                  (looking-at "^)"))
+                0)
+               ;; Open or close curly brace at the beginning of a line
+               ;; is a block start or end. Leave it at the beginning of
+               ;; the line.
+               ((save-excursion
+                  (beginning-of-line)
+                  (or (looking-at "^{")
+                      (looking-at "^}")))
+                0)
+               ;; Indent else
+               ((save-excursion
+                  (beginning-of-line)
+                  (looking-at "^\\s-*else\\s-*"))
+                (save-excursion
+                  (search-backward "then")
+                  (current-column)))
+               ;; Indent after else
+               ((save-excursion
+                  (beginning-of-line)
+                  (previous-line)
+                  (looking-at "^\\s-*else\\s-*"))
+                (save-excursion
+                  (beginning-of-line)
+                  (previous-line)
+                  (search-forward "else")
+                  (+ (- (current-column) 4) xquery-indent-size)))
+               ;; Indent up to if
+               ((save-excursion
+                  (beginning-of-line)
+                  (previous-line)
+                  (looking-at "^\\s-*if\\s-*\("))
+                (save-excursion
+                  (beginning-of-line)
+                  (previous-line)
+                  (search-forward "if")
+                  (- (current-column) 2)))
+               ;; Indent after then
+               ((save-excursion
+                  (beginning-of-line)
+                  (previous-line)
+                  (looking-at "^\\s-*then\\s-*"))
+                (save-excursion
+                  (beginning-of-line)
+                  (previous-line)
+                  (search-forward "then")
+                  (+ (- (current-column) 4) xquery-indent-size)))
+               ;; Indent after return
+               ((save-excursion
+                  (beginning-of-line)
+                  (previous-line)
+                  (looking-at "^\\s-*return\\s-*"))
+                (save-excursion
+                  (beginning-of-line)
+                  (previous-line)
+                  (search-forward "return")
+                  (+ (- (current-column) 6) xquery-indent-size)))
+               ;; Indent up to let
+               ((save-excursion
+                  (beginning-of-line)
+                  (previous-line)
+                  (looking-at "^\\s-*let\\s-*"))
+                (save-excursion
+                  (beginning-of-line)
+                  (previous-line)
+                  (search-forward "let")
+                  (- (current-column) 3)))
+               ;; default - use paren-level-bol
+               (t (* xquery-indent-size
+                     ;; special when simply closing 1 level
+                     (cond
+                      ((and (= paren-level-bol (+ 1 paren-level-eol))
+                            (looking-at "^\\s-*\\s)[,;]?\\s-*$") )
+                       paren-level-eol)
+                      ;; factor in the nxml-indent
+                      ((and
+                        nxml-indent (> nxml-indent paren-level-bol))
+                       nxml-indent)
+                      (t paren-level-bol)))))))
+        (list (min 70 indent) results-bol results-eol)))))
 
 (provide 'xquery-mode)
 
