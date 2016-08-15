@@ -506,16 +506,18 @@ be indented."
                     (- (current-column) 3)))
                  ;; default - use paren-level-bol
                  (t (* xquery-indent-size
-                       ;; special when simply closing 1 level
                        (cond
-                        ((and (= paren-level-bol (+ 1 paren-level-eol))
-                              (looking-at "^\\s-*\\s)[,;]?\\s-*$") )
+                        ((and paren-level-bol
+                              paren-level-eol
+                              (= paren-level-bol (+ 1 paren-level-eol))
+                              (looking-at "^\\s-*\\s)[,;]?\\s-*$"))
                          paren-level-eol)
-                        ;; factor in the nxml-indent
-                        ((and
-                          nxml-indent (> nxml-indent paren-level-bol))
+                        ((and nxml-indent
+                              paren-level-bol
+                              (> nxml-indent paren-level-bol))
                          nxml-indent)
-                        (t paren-level-bol)))))))
+                        (paren-level-bol paren-level-bol)
+                        (t 0)))))))
           (list (min 70 indent) results-bol results-eol))))))
 
 (provide 'xquery-mode)
