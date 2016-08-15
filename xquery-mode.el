@@ -376,174 +376,147 @@ This function returns the column to which the current line should
 be indented."
   (save-excursion
     (beginning-of-line)
-    (let* ((point-bol (point))
-           (results-bol (parse-partial-sexp (point-min) point-bol))
-           ;; 0. depth in parens.
-           (paren-level-bol (car results-bol))
-           ;; 1. character address of start of innermost containing list.
-           (list-start-bol  (car (cdr results-bol)))
-           ;; 2. character address of start of last complete sexp.
-           (sexp-start-bol  (car (cdr (cdr results-bol))) )
-           ;; 3. non-nil if inside a string.
-           (stringp-bol     (car (cdr (cdr (cdr results-bol)))) )
-           ;; 4. nil if outside comment, t if inside non-nesting comment,
-           ;;    else integer comment nesting.
-           (comment-level-bol
-            (car (cdr (cdr (cdr (cdr results-bol))))) )
-           ;; 5. t if following a quote character.
-           (quotep-bol
-            (car (cdr (cdr (cdr (cdr (cdr results-bol)))))) )
-           ;; 6. the minimum paren-depth encountered during this scan.
-           (min-level-bol
-            (car (cdr (cdr (cdr (cdr (cdr (cdr results-bol))))))) )
-           ;; 7. t if in a comment of style b;
-           ;;    symbol 'syntax-table' if the comment is generic.
-           (bcommentp-bol
-            (car (cdr (cdr (cdr (cdr (cdr (cdr (cdr results-bol)))))))) )
-           ;; 8. character address of start of comment or string, else nil.
-           (comment-start-bol
-            (car (cdr (cdr
-                       (cdr (cdr (cdr (cdr (cdr
-                                            (cdr results-bol))))))))))
-           ;; 9. intermediate data for continuation of parsing. (not used)
-           (point-eol (save-excursion (end-of-line) (point)))
-           ;; undocumented, but parse-partial-sexp seems to change point
-           ;; TODO use state-bol? seems to have problems
-           (results-eol (save-excursion
-                          (parse-partial-sexp (point-min) point-eol)))
-           ;; what would nxml do?
-           (results-nxml
-            (cond
-             ((looking-at "\\s-*<!--")
-              (list (xquery-indent-via-nxml) "xml start-comment"))
-             ((looking-at "\\s-*-->")
-              (list (xquery-indent-via-nxml) "xml end-comment"))
-             ((looking-at "\\s-*<\\sw+")
-              (list (xquery-indent-via-nxml) "xml start-element"))
-             ((looking-at "\\s-*</?\\sw+")
-              (list (xquery-indent-via-nxml) "xml end-element"))
-             (t nil) ) )
-           ;; later we will multiple by xquery-indent-size
-           (nxml-indent
-            (if results-nxml
-                (/ (car results-nxml) xquery-indent-size))))
-      (let* (;; 0. depth in parens
-             (paren-level-eol (car results-eol))
-             (indent
-              (cond
-               (comment-level-bol
-                ;; within a multi-line comment
-                ;; start of comment indentation + 1
-                (+ 1 (save-excursion
-                       (goto-char comment-start-bol)
-                       (current-indentation))))
-               ;; TODO multi-line prolog variable?
-               (nil -1)
-               ;; mult-line module import?
-               ((and (save-excursion
-                       (beginning-of-line)
-                       (looking-at "^\\s-*at\\s-+"))
-                     (save-excursion
-                       (beginning-of-line)
-                       (previous-line)
-                       (looking-at "^\\s-*import\\s-+module\\s-+")))
-                xquery-indent-size)
-               ;; multi-line function decl?
-               ;; TODO handle more than 1 line previous
-               ((and (save-excursion
-                       (beginning-of-line)
-                       (looking-at "^\\s-*as\\s-+"))
-                     (save-excursion
-                       (beginning-of-line)
-                       (previous-line)
-                       (looking-at
-                        "^\\s-*\\(define\\|declare\\)\\s-+function\\s-+")))
-                xquery-indent-size)
-               ;; Close paren at start of line is usually the end of
-               ;; a list of function parameters. Leave it at the beginning
-               ;; of the line
-               ((save-excursion
-                  (beginning-of-line)
-                  (looking-at "^)"))
-                0)
-               ;; Open or close curly brace at the beginning of a line
-               ;; is a block start or end. Leave it at the beginning of
-               ;; the line.
-               ((save-excursion
-                  (beginning-of-line)
-                  (or (looking-at "^{")
-                      (looking-at "^}")))
-                0)
-               ;; Indent else
-               ((save-excursion
-                  (beginning-of-line)
-                  (looking-at "^\\s-*else\\s-*"))
-                (save-excursion
-                  (search-backward "then")
-                  (current-column)))
-               ;; Indent after else
-               ((save-excursion
-                  (beginning-of-line)
-                  (previous-line)
-                  (looking-at "^\\s-*else\\s-*"))
-                (save-excursion
-                  (beginning-of-line)
-                  (previous-line)
-                  (search-forward "else")
-                  (+ (- (current-column) 4) xquery-indent-size)))
-               ;; Indent up to if
-               ((save-excursion
-                  (beginning-of-line)
-                  (previous-line)
-                  (looking-at "^\\s-*if\\s-*\("))
-                (save-excursion
-                  (beginning-of-line)
-                  (previous-line)
-                  (search-forward "if")
-                  (- (current-column) 2)))
-               ;; Indent after then
-               ((save-excursion
-                  (beginning-of-line)
-                  (previous-line)
-                  (looking-at "^\\s-*then\\s-*"))
-                (save-excursion
-                  (beginning-of-line)
-                  (previous-line)
-                  (search-forward "then")
-                  (+ (- (current-column) 4) xquery-indent-size)))
-               ;; Indent after return
-               ((save-excursion
-                  (beginning-of-line)
-                  (previous-line)
-                  (looking-at "^\\s-*return\\s-*"))
-                (save-excursion
-                  (beginning-of-line)
-                  (previous-line)
-                  (search-forward "return")
-                  (+ (- (current-column) 6) xquery-indent-size)))
-               ;; Indent up to let
-               ((save-excursion
-                  (beginning-of-line)
-                  (previous-line)
-                  (looking-at "^\\s-*let\\s-*"))
-                (save-excursion
-                  (beginning-of-line)
-                  (previous-line)
-                  (search-forward "let")
-                  (- (current-column) 3)))
-               ;; default - use paren-level-bol
-               (t (* xquery-indent-size
-                     ;; special when simply closing 1 level
-                     (cond
-                      ((and (= paren-level-bol (+ 1 paren-level-eol))
-                            (looking-at "^\\s-*\\s)[,;]?\\s-*$") )
-                       paren-level-eol)
-                      ;; factor in the nxml-indent
-                      ((and
-                        nxml-indent (> nxml-indent paren-level-bol))
-                       nxml-indent)
-                      (t paren-level-bol)))))))
-        (list (min 70 indent) results-bol results-eol)))))
+    (cl-destructuring-bind
+        (results-bol
+         paren-level-bol
+         list-start-bol
+         sexp-start-bol
+         stringp-bol
+         comment-level-bol
+         quotep-bol
+         min-level-bol
+         bcommentp-bol
+         comment-start-bol)
+        (save-excursion (parse-partial-sexp (point-min) (point)))
+      (let* ((point-eol (line-end-position))
+             (results-eol (save-excursion (parse-partial-sexp (point-min) point-eol)))
+             (results-nxml
+              (when (or (looking-at "\\s-*<!--")
+                        (looking-at "\\s-*-->")
+                        (looking-at "\\s-*<\\sw+")
+                        (looking-at "\\s-*</?\\sw+"))
+                (xquery-indent-via-nxml)))
+             (nxml-indent
+              (when results-nxml
+                (/ results-nxml xquery-indent-size))))
+        (let* ((paren-level-eol (car results-eol))
+               (indent
+                (cond
+                 ((eq (point-min) (line-beginning-position))
+                  0)
+                 (comment-level-bol
+                  ;; within a multi-line comment start of comment
+                  ;; indentation + 1
+                  (+ 1 (save-excursion
+                         (goto-char comment-start-bol)
+                         (current-indentation))))
+                 ;; TODO multi-line prolog variable?
+                 (nil -1)
+                 ;; mult-line module import?
+                 ((and (save-excursion
+                         (beginning-of-line)
+                         (looking-at "^\\s-*at\\s-+"))
+                       (save-excursion
+                         (beginning-of-line)
+                         (previous-line)
+                         (looking-at "^\\s-*import\\s-+module\\s-+")))
+                  xquery-indent-size)
+                 ;; multi-line function decl?
+                 ;; TODO handle more than 1 line previous
+                 ((and (save-excursion
+                         (beginning-of-line)
+                         (looking-at "^\\s-*as\\s-+"))
+                       (save-excursion
+                         (beginning-of-line)
+                         (previous-line)
+                         (looking-at
+                          "^\\s-*\\(define\\|declare\\)\\s-+function\\s-+")))
+                  xquery-indent-size)
+                 ;; Close paren at start of line is usually the end of
+                 ;; a list of function parameters. Leave it at the beginning
+                 ;; of the line
+                 ((save-excursion
+                    (beginning-of-line)
+                    (looking-at "^)"))
+                  0)
+                 ;; Open or close curly brace at the beginning of a line
+                 ;; is a block start or end. Leave it at the beginning of
+                 ;; the line.
+                 ((save-excursion
+                    (beginning-of-line)
+                    (or (looking-at "^{")
+                        (looking-at "^}")))
+                  0)
+                 ;; Indent else
+                 ((save-excursion
+                    (beginning-of-line)
+                    (looking-at "^\\s-*else\\s-*"))
+                  (save-excursion
+                    (search-backward "then")
+                    (current-column)))
+                 ;; Indent after else
+                 ((save-excursion
+                    (beginning-of-line)
+                    (previous-line)
+                    (looking-at "^\\s-*else\\s-*"))
+                  (save-excursion
+                    (beginning-of-line)
+                    (previous-line)
+                    (search-forward "else")
+                    (+ (- (current-column) 4) xquery-indent-size)))
+                 ;; Indent up to if
+                 ((save-excursion
+                    (beginning-of-line)
+                    (previous-line)
+                    (looking-at "^\\s-*if\\s-*\("))
+                  (save-excursion
+                    (beginning-of-line)
+                    (previous-line)
+                    (search-forward "if")
+                    (- (current-column) 2)))
+                 ;; Indent after then
+                 ((save-excursion
+                    (beginning-of-line)
+                    (previous-line)
+                    (looking-at "^\\s-*then\\s-*"))
+                  (save-excursion
+                    (beginning-of-line)
+                    (previous-line)
+                    (search-forward "then")
+                    (+ (- (current-column) 4) xquery-indent-size)))
+                 ;; Indent after return
+                 ((save-excursion
+                    (beginning-of-line)
+                    (previous-line)
+                    (looking-at "^\\s-*return\\s-*"))
+                  (save-excursion
+                    (beginning-of-line)
+                    (previous-line)
+                    (search-forward "return")
+                    (+ (- (current-column) 6) xquery-indent-size)))
+                 ;; Indent up to let
+                 ((save-excursion
+                    (beginning-of-line)
+                    (previous-line)
+                    (looking-at "^\\s-*let\\s-*"))
+                  (save-excursion
+                    (beginning-of-line)
+                    (previous-line)
+                    (search-forward "let")
+                    (- (current-column) 3)))
+                 ;; default - use paren-level-bol
+                 (t (* xquery-indent-size
+                       ;; special when simply closing 1 level
+                       (cond
+                        ((and (= paren-level-bol (+ 1 paren-level-eol))
+                              (looking-at "^\\s-*\\s)[,;]?\\s-*$") )
+                         paren-level-eol)
+                        ;; factor in the nxml-indent
+                        ((and
+                          nxml-indent (> nxml-indent paren-level-bol))
+                         nxml-indent)
+                        (t paren-level-bol)))))))
+          (list (min 70 indent) results-bol results-eol))))))
 
 (provide 'xquery-mode)
 
