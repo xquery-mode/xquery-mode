@@ -374,23 +374,37 @@ otherwise."
   "Calculate the indentation for a line of XQuery.
 This function returns the column to which the current line should
 be indented."
-  (save-excursion
-    (beginning-of-line)
+  (cl-destructuring-bind
+      (paren-level-bol
+       list-start-bol
+       sexp-start-bol
+       stringp-bol
+       comment-level-bol
+       quotep-bol
+       min-level-bol
+       bcommentp-bol
+       comment-start-bol
+       results-bol)
+      (save-excursion
+        (parse-partial-sexp
+         (point-min)
+         (line-beginning-position)))
     (cl-destructuring-bind
-        (results-bol
-         paren-level-bol
-         list-start-bol
-         sexp-start-bol
-         stringp-bol
-         comment-level-bol
-         quotep-bol
-         min-level-bol
-         bcommentp-bol
-         comment-start-bol)
-        (save-excursion (parse-partial-sexp (point-min) (point)))
-      (let* ((point-eol (line-end-position))
-             (results-eol (save-excursion (parse-partial-sexp (point-min) point-eol)))
-             (results-nxml
+        (paren-level-eol
+         list-start-eol
+         sexp-start-eol
+         stringp-eol
+         comment-level-eol
+         quotep-eol
+         min-level-eol
+         bcommentp-eol
+         comment-start-eol
+         results-eol)
+        (save-excursion
+          (parse-partial-sexp
+           (point-min)
+           (line-end-position)))
+      (let* ((results-nxml
               (when (or (looking-at "\\s-*<!--")
                         (looking-at "\\s-*-->")
                         (looking-at "\\s-*<\\sw+")
@@ -399,8 +413,7 @@ be indented."
              (nxml-indent
               (when results-nxml
                 (/ results-nxml xquery-indent-size))))
-        (let* ((paren-level-eol (car results-eol))
-               (indent
+        (let* ((indent
                 (cond
                  ((eq (point-min) (line-beginning-position))
                   0)
