@@ -415,7 +415,7 @@ be indented."
                 (/ results-nxml xquery-indent-size))))
         (let* ((indent
                 (cond
-                 ((eq (point-min) (line-beginning-position))
+                 ((looking-back "\\`\\(\\s-*\\|\n*\\)*" nil)
                   0)
                  (comment-level-bol
                   ;; within a multi-line comment start of comment
