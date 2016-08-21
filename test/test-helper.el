@@ -5,8 +5,6 @@
 ;;; Code:
 
 (require 'cask)
-(require 'shut-up)
-
 (let ((source-directory (locate-dominating-file load-file-name "Cask")))
   (cask-initialize source-directory)
   (add-to-list 'load-path source-directory))
@@ -24,7 +22,7 @@
        (insert ,before)
        (goto-char (point-min))
        (xquery-mode)
-       (shut-up (indent-region (point-min) (point-max)))
+       (indent-region (point-min) (point-max))
        (should (string= (buffer-substring-no-properties (point-min) (point-max))
                         ,after)))))
 
