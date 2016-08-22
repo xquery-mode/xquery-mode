@@ -351,7 +351,7 @@ otherwise."
   "Indent current line as xquery code."
   (interactive)
   (let ((savept (> (current-column) (current-indentation)))
-        (indent (car (xquery-calculate-indentation))))
+        (indent (xquery-calculate-indentation)))
     (if (> indent -1)
         (if savept
             (save-excursion (indent-line-to indent))
@@ -457,8 +457,14 @@ be indented."
                  ;; the line.
                  ((save-excursion
                     (beginning-of-line)
-                    (or (looking-at "^{")
-                        (looking-at "^}")))
+                    (looking-at "^\\s-*{"))
+                  (save-excursion
+                    (previous-line)
+                    (back-to-indentation)
+                    (+ (current-column) xquery-mode-indent-width)))
+                 ((save-excursion
+                    (beginning-of-line)
+                    (looking-at "^}"))
                   0)
                  ;; Indent else
                  ((save-excursion
@@ -531,7 +537,7 @@ be indented."
                          nxml-indent)
                         (paren-level-bol paren-level-bol)
                         (t 0)))))))
-          (list (min 70 indent) results-bol results-eol))))))
+          (min 70 indent))))))
 
 (provide 'xquery-mode)
 
