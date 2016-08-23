@@ -11,6 +11,8 @@
 
 (undercover "xquery-mode.el")
 
+(setq-default indent-tabs-mode nil)
+
 (require 'xquery-mode)
 
 (defmacro define-indent-test (testname args doc before after)
