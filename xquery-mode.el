@@ -352,10 +352,14 @@ otherwise."
   (interactive)
   (let ((savept (> (current-column) (current-indentation)))
         (indent (xquery-calculate-indentation)))
-    (if (> indent -1)
-        (if savept
-            (save-excursion (indent-line-to indent))
-          (indent-line-to (max 0 indent))))))
+    (when (> indent -1)
+      (save-excursion
+        (back-to-indentation)
+        (when (not (eq indent (current-column)))
+          (delete-region (line-beginning-position) (point)))
+        (indent-line-to indent))
+      (when (not savept)
+        (back-to-indentation)))))
 
 (defun xquery-indent-via-nxml ()
   "This function use nxml to calculate the indentation."
@@ -457,6 +461,14 @@ be indented."
                  ;; the line.
                  ((save-excursion
                     (beginning-of-line)
+                    (looking-at "^\\s-*{"))
+                  (save-excursion
+                    (previous-line)
+                    (back-to-indentation)
+                    (+ (current-column) xquery-mode-indent-width)))
+                 ((save-excursion
+                    (beginning-of-line)
+                    (previous-line)
                     (looking-at "^\\s-*{"))
                   (save-excursion
                     (previous-line)
