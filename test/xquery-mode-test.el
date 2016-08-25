@@ -80,6 +80,60 @@ baz
     for $tpi in fn:subsequence()
 ")
 
+(define-indent-test flwor-expression-close-bracket ()
+  "Indent FLWOR close curly bracket same level as corresponding
+open bracket."
+  "
+<tbody>
+{
+	for $tpi in fn:subsequence()
+	}
+" "
+<tbody>
+  {
+    for $tpi in fn:subsequence()
+  }
+")
+
+(define-indent-test flwor-expression-nested-curly-brackets ()
+  "Indent nested curly brackets with dipper indentation level."
+  "
+
+<html><body>
+{
+	for $act in doc(\"hamlet.xml\")//ACT
+	let $speakers := distinct-values($act//SPEAKER)
+	return
+		<div>
+		<h1>{ string($act/TITLE) }</h1>
+		<ul>
+{
+			for $speaker in $speakers
+			return <li>{ $speaker }</li>
+}
+		</ul>
+		</div>
+}
+</body></html>
+" "
+<html><body>
+  {
+    for $act in doc(\"hamlet.xml\")//ACT
+    let $speakers := distinct-values($act//SPEAKER)
+    return
+      <div>
+        <h1>{ string($act/TITLE) }</h1>
+        <ul>
+          {
+            for $speaker in $speakers
+            return <li>{ $speaker }</li>
+          }
+        </ul>
+      </div>
+  }
+</body></html>
+")
+
 (define-indent-test flwor-for-let-let-sequential ()
   "Indent for let lest sequential expression to same column."
   "
