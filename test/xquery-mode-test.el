@@ -101,7 +101,7 @@ curly bracket is missed."
   "
 <html>
 		<body>
-	}" "
+  }" "
 <html>
   <body>
 }")

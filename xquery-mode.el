@@ -478,9 +478,10 @@ be indented."
                     (beginning-of-line)
                     (looking-at "^\\s-*}"))
                   (save-excursion
-                    (re-search-backward "^\\s-*{" nil t)
-                    (back-to-indentation)
-                    (current-column)))
+                    (if (not (re-search-backward "^\\s-*{" nil t))
+                        0
+                     (back-to-indentation)
+                     (current-column))))
                  ;; Indent else
                  ((save-excursion
                     (beginning-of-line)
