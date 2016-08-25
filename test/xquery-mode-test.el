@@ -95,10 +95,20 @@ open bracket."
   }
 ")
 
+(define-indent-test flwor-missed-open-curly-bracket ()
+  "Indent close curly bracket to the beginning of line if open
+curly bracket is missed."
+  "
+<html>
+		<body>
+	}" "
+<html>
+  <body>
+}")
+
 (define-indent-test flwor-expression-nested-curly-brackets ()
   "Indent nested curly brackets with dipper indentation level."
   "
-
 <html><body>
 {
 	for $act in doc(\"hamlet.xml\")//ACT

@@ -355,7 +355,7 @@ otherwise."
     (when (> indent -1)
       (save-excursion
         (back-to-indentation)
-        (when (not (eq indent (current-column)))
+        (when (looking-back "^\t+" (line-beginning-position))
           (delete-region (line-beginning-position) (point)))
         (indent-line-to indent))
       (when (not savept)
@@ -476,8 +476,11 @@ be indented."
                     (+ (current-column) xquery-mode-indent-width)))
                  ((save-excursion
                     (beginning-of-line)
-                    (looking-at "^}"))
-                  0)
+                    (looking-at "^\\s-*}"))
+                  (save-excursion
+                    (re-search-backward "^\\s-*{" nil t)
+                    (back-to-indentation)
+                    (current-column)))
                  ;; Indent else
                  ((save-excursion
                     (beginning-of-line)
