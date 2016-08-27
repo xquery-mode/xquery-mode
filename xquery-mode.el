@@ -420,37 +420,24 @@ be indented."
                 (/ results-nxml xquery-indent-size))))
         (let* ((indent
                 (cond
-                 ;; The first meaningful line in the buffer.
-                 ((looking-back "\\`\\(\\s-*\\|\n*\\)*" nil)
+                 ((or (looking-back "\\`\\(\\s-*\\|\n*\\)*" nil)
+                      (line-starts-with "\\s-*\\'"))
                   0)
-                 ;; Last line in the buffer.
-                 ((line-starts-with "\\s-*\\'")
-                  0)
-                 ;; within a multi-line comment start of comment
-                 ;; indentation + 1
                  (comment-level-bol
                   (+ 1 (save-excursion
                          (goto-char comment-start-bol)
                          (current-indentation))))
-                 ;; TODO multi-line prolog variable
-                 (nil -1)
-                 ;; mult-line module import
                  ((and (line-starts-with "^\\s-*at\\s-+")
                        (previous-line-starts-with"^\\s-*import\\s-+module\\s-+"))
                   xquery-indent-size)
-                 ;; multi-line function decl
-                 ;; TODO handle more than 1 line previous
                  ((and (line-starts-with "^\\s-*as\\s-+")
                        (previous-line-starts-with "^\\s-*\\(define\\|declare\\)\\s-+function\\s-+"))
                   xquery-indent-size)
-                 ;; Close paren at start of line is usually the end of
-                 ;; a list of function parameters. Leave it at the beginning
-                 ;; of the line
                  ((line-starts-with "^)")
                   0)
-                 ;; Open or close curly brace at the beginning of a line
-                 ;; is a block start or end. Leave it at the beginning of
-                 ;; the line.
+                 ((and (previous-line-starts-with "^\\s-*\\(define\\|declare\\)\\s-+function\\s-+")
+                       (line-starts-with "^\\s-*{"))
+                  (previous-line-indentation))
                  ((line-starts-with "^\\s-*{")
                   (+ (previous-line-indentation) xquery-mode-indent-width))
                  ((previous-line-starts-with "^\\s-*{")
@@ -471,52 +458,44 @@ be indented."
                                 ((looking-at "^\\s-*{")
                                  (cl-decf close-counter)))))
                       exit)))
-                 ;; after for
                  ((previous-line-starts-with "^\\s-*for\\s-*")
                   (previous-line-indentation))
                  ((previous-line-starts-with "^\\s-*(for\\s-*")
                   (1+ (previous-line-indentation)))
-                 ;; else
                  ((line-starts-with "^\\s-*else\\s-*")
                   (save-excursion
                     (search-backward "then")
                     (current-column)))
-                 ;; after else
                  ((previous-line-starts-with "^\\s-*else\\s-*")
                   (save-excursion
                     (beginning-of-line)
                     (previous-line)
                     (search-forward "else")
                     (+ (- (current-column) 4) xquery-indent-size)))
-                 ;; up to if
                  ((previous-line-starts-with "^\\s-*if\\s-*\(")
                   (save-excursion
                     (beginning-of-line)
                     (previous-line)
                     (search-forward "if")
                     (- (current-column) 2)))
-                 ;; after then
                  ((previous-line-starts-with "^\\s-*then\\s-*")
                   (save-excursion
                     (beginning-of-line)
                     (previous-line)
                     (search-forward "then")
                     (+ (- (current-column) 4) xquery-indent-size)))
-                 ;; after return
                  ((previous-line-starts-with "^\\s-*return\\s-*")
                   (save-excursion
                     (beginning-of-line)
                     (previous-line)
                     (search-forward "return")
                     (+ (- (current-column) 6) xquery-indent-size)))
-                 ;; up to let
                  ((previous-line-starts-with "^\\s-*let\\s-*")
                   (save-excursion
                     (beginning-of-line)
                     (previous-line)
                     (search-forward "let")
                     (- (current-column) 3)))
-                 ;; default - use paren-level-bol
                  (t (* xquery-indent-size
                        (cond
                         ((and paren-level-bol
