@@ -468,40 +468,43 @@ be indented."
                                 ((looking-at "^\\s-*{")
                                  (cl-decf close-counter)))))
                       exit)))
-                 ;; Indent else
+                 ;; for
+                 ((previous-line-starts-with "^\\s-*for\\s-*")
+                  (previous-line-indentation))
+                 ;; else
                  ((line-starts-with "^\\s-*else\\s-*")
                   (save-excursion
                     (search-backward "then")
                     (current-column)))
-                 ;; Indent after else
+                 ;; after else
                  ((previous-line-starts-with "^\\s-*else\\s-*")
                   (save-excursion
                     (beginning-of-line)
                     (previous-line)
                     (search-forward "else")
                     (+ (- (current-column) 4) xquery-indent-size)))
-                 ;; Indent up to if
+                 ;; up to if
                  ((previous-line-starts-with "^\\s-*if\\s-*\(")
                   (save-excursion
                     (beginning-of-line)
                     (previous-line)
                     (search-forward "if")
                     (- (current-column) 2)))
-                 ;; Indent after then
+                 ;; after then
                  ((previous-line-starts-with "^\\s-*then\\s-*")
                   (save-excursion
                     (beginning-of-line)
                     (previous-line)
                     (search-forward "then")
                     (+ (- (current-column) 4) xquery-indent-size)))
-                 ;; Indent after return
+                 ;; after return
                  ((previous-line-starts-with "^\\s-*return\\s-*")
                   (save-excursion
                     (beginning-of-line)
                     (previous-line)
                     (search-forward "return")
                     (+ (- (current-column) 6) xquery-indent-size)))
-                 ;; Indent up to let
+                 ;; up to let
                  ((previous-line-starts-with "^\\s-*let\\s-*")
                   (save-excursion
                     (beginning-of-line)
