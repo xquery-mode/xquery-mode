@@ -468,9 +468,11 @@ be indented."
                                 ((looking-at "^\\s-*{")
                                  (cl-decf close-counter)))))
                       exit)))
-                 ;; for
+                 ;; after for
                  ((previous-line-starts-with "^\\s-*for\\s-*")
                   (previous-line-indentation))
+                 ((previous-line-starts-with "^\\s-*(for\\s-*")
+                  (1+ (previous-line-indentation)))
                  ;; else
                  ((line-starts-with "^\\s-*else\\s-*")
                   (save-excursion
