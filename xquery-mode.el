@@ -466,6 +466,10 @@ be indented."
                   (save-excursion
                     (search-backward "then")
                     (current-column)))
+                 ((line-starts-with "^\\s-*then\\s-*")
+                  (save-excursion
+                    (search-backward "if")
+                    (current-column)))
                  ((previous-line-starts-with "^\\s-*else\\s-*")
                   (+ (previous-line-indentation) xquery-mode-indent-width))
                  ((previous-line-starts-with "^\\s-*if\\s-*")
