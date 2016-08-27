@@ -485,17 +485,9 @@ be indented."
                     (search-forward "then")
                     (+ (- (current-column) 4) xquery-indent-size)))
                  ((previous-line-starts-with "^\\s-*return\\s-*")
-                  (save-excursion
-                    (beginning-of-line)
-                    (previous-line)
-                    (search-forward "return")
-                    (+ (- (current-column) 6) xquery-indent-size)))
+                  (+ (previous-line-indentation) xquery-mode-indent-width))
                  ((previous-line-starts-with "^\\s-*let\\s-*")
-                  (save-excursion
-                    (beginning-of-line)
-                    (previous-line)
-                    (search-forward "let")
-                    (- (current-column) 3)))
+                  (previous-line-indentation))
                  (t (* xquery-indent-size
                        (cond
                         ((and paren-level-bol
