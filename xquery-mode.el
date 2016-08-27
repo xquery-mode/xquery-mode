@@ -423,6 +423,9 @@ be indented."
                  ;; The first meaningful line in the buffer.
                  ((looking-back "\\`\\(\\s-*\\|\n*\\)*" nil)
                   0)
+                 ;; Last line in the buffer.
+                 ((line-starts-with "\\s-*\\'")
+                  0)
                  ;; within a multi-line comment start of comment
                  ;; indentation + 1
                  (comment-level-bol

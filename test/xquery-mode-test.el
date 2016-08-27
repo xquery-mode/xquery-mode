@@ -24,7 +24,7 @@ declare function local:get-provider-group-membership($mpf-provider as element(pr
 " "
 (for $group-membership in $mpf-provider/provider-group-membership
  order by $group-membership/group-membership-effective-date descending
- ")
+")
 
 (define-indent-test flwor-expression-keyword-on-next-line ()
   "Indent line started with RETURN keyword to same column as previous line started with ORDER BY."
