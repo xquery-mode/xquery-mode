@@ -420,21 +420,22 @@ be indented."
                 (/ results-nxml xquery-indent-size))))
         (let* ((indent
                 (cond
+                 ;; The first meaningful line in the buffer.
                  ((looking-back "\\`\\(\\s-*\\|\n*\\)*" nil)
                   0)
+                 ;; within a multi-line comment start of comment
+                 ;; indentation + 1
                  (comment-level-bol
-                  ;; within a multi-line comment start of comment
-                  ;; indentation + 1
                   (+ 1 (save-excursion
                          (goto-char comment-start-bol)
                          (current-indentation))))
-                 ;; TODO multi-line prolog variable?
+                 ;; TODO multi-line prolog variable
                  (nil -1)
-                 ;; mult-line module import?
+                 ;; mult-line module import
                  ((and (line-starts-with "^\\s-*at\\s-+")
                        (previous-line-starts-with"^\\s-*import\\s-+module\\s-+"))
                   xquery-indent-size)
-                 ;; multi-line function decl?
+                 ;; multi-line function decl
                  ;; TODO handle more than 1 line previous
                  ((and (line-starts-with "^\\s-*as\\s-+")
                        (previous-line-starts-with "^\\s-*\\(define\\|declare\\)\\s-+function\\s-+"))
@@ -442,23 +443,15 @@ be indented."
                  ;; Close paren at start of line is usually the end of
                  ;; a list of function parameters. Leave it at the beginning
                  ;; of the line
-                 ((save-excursion
-                    (beginning-of-line)
-                    (looking-at "^)"))
+                 ((line-starts-with "^)")
                   0)
                  ;; Open or close curly brace at the beginning of a line
                  ;; is a block start or end. Leave it at the beginning of
                  ;; the line.
                  ((line-starts-with "^\\s-*{")
-                  (save-excursion
-                    (previous-line)
-                    (back-to-indentation)
-                    (+ (current-column) xquery-mode-indent-width)))
+                  (+ (previous-line-indentation) xquery-mode-indent-width))
                  ((previous-line-starts-with "^\\s-*{")
-                  (save-excursion
-                    (previous-line)
-                    (back-to-indentation)
-                    (+ (current-column) xquery-mode-indent-width)))
+                  (+ (previous-line-indentation) xquery-mode-indent-width))
                  ((line-starts-with "^\\s-*}")
                   (save-excursion
                     (let ((close-counter 0)
@@ -540,6 +533,11 @@ be indented."
   (save-excursion
     (forward-line -1)
     (line-starts-with re)))
+
+(defun previous-line-indentation ()
+  (save-excursion
+    (forward-line -1)
+    (current-indentation)))
 
 (provide 'xquery-mode)
 
