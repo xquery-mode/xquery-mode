@@ -35,6 +35,7 @@
 ;; TODO: test using featurep 'xemacs
 ;; TODO use nxml for element completion?
 
+(require 'cl-lib)
 (require 'font-lock)
 (require 'nxml-mode)
 
@@ -478,10 +479,20 @@ be indented."
                     (beginning-of-line)
                     (looking-at "^\\s-*}"))
                   (save-excursion
-                    (if (not (re-search-backward "^\\s-*{" nil t))
-                        0
-                     (back-to-indentation)
-                     (current-column))))
+                    (let ((close-counter 0)
+                          exit)
+                      (while (not exit)
+                        (let ((pos (re-search-backward "^\\s-*[{}]" nil t)))
+                          (cond ((not pos)
+                                 (setq exit 0))
+                                ((looking-at "^\\s-*}")
+                                 (cl-incf close-counter))
+                                ((and (looking-at "^\\s-*{") (zerop close-counter))
+                                 (back-to-indentation)
+                                 (setq exit (current-column)))
+                                ((looking-at "^\\s-*{")
+                                 (cl-decf close-counter)))))
+                      exit)))
                  ;; Indent else
                  ((save-excursion
                     (beginning-of-line)
