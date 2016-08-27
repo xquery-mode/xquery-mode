@@ -480,6 +480,12 @@ be indented."
                   (+ (previous-line-indentation) xquery-mode-indent-width))
                  ((previous-line-starts-with "^\\s-*let\\s-*")
                   (previous-line-indentation))
+                 ((and (line-starts-with "^\\s-*or\\s-*")
+                       (previous-line-starts-with "^\\s-*where\\s-*"))
+                  (+ (previous-line-indentation) 6))
+                 ((and (line-starts-with "^\\s-*or\\s-*")
+                       (previous-line-starts-with "^\\s-*or\\s-*"))
+                  (previous-line-indentation))
                  (t (* xquery-indent-size
                        (cond
                         ((and paren-level-bol
