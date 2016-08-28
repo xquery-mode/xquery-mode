@@ -367,10 +367,11 @@ be indented."
    ((or (looking-back "\\`\\(\\s-*\\|\n*\\)*" nil)
         (line-starts-with "\\s-*\\'"))
     0)
-   ;; TODO: open xml tag
-   ;; ((line-starts-with "\\s-*<\\sw+")
-   ;;  (save-excursion
-   ;;    (re-search-backward "<\\sw+")))
+   ((previous-line-starts-with "^\\s-*<\\(\\sw+\\)")
+    (if (previous-line-ends-with
+         (format "</%s>\\s-*$" (match-string-no-properties 1)))
+        (previous-line-indentation)
+      (+ (previous-line-indentation) xquery-mode-indent-width)))
    ;; TODO: close xml tag
    ;; TODO: open xml comment
    ;; TODO: close xml comment
@@ -447,12 +448,22 @@ be indented."
 (defun line-starts-with (re)
   (save-excursion
     (beginning-of-line)
-    (looking-at-p re)))
+    (looking-at re)))
+
+(defun line-ends-with (re)
+  (save-excursion
+    (end-of-line)
+    (looking-back re)))
 
 (defun previous-line-starts-with (re)
   (save-excursion
     (forward-line -1)
     (line-starts-with re)))
+
+(defun previous-line-ends-with (re)
+  (save-excursion
+    (forward-line -1)
+    (line-ends-with re)))
 
 (defun previous-line-indentation ()
   (save-excursion
