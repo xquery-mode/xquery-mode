@@ -42,10 +42,12 @@ return $group-membership)[1]
 <html>
 <head>
 <title>Access points with an Organization TPI</title>
+<meta>Hello</meta>
 " "
 <html>
   <head>
     <title>Access points with an Organization TPI</title>
+    <meta>Hello</meta>
 ")
 
 (define-indent-test sequential-xml-tag ()

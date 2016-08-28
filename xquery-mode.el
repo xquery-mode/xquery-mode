@@ -336,9 +336,6 @@ otherwise."
         (nxml-forward-balanced-item arg)
       (let ((forward-sexp-function nil)) (forward-sexp arg)))))
 
-(defvar xquery-indent-size tab-width
-  "The size of each indent level.")
-
 (defun xquery-set-indent-function ()
   "Set the indent function for xquery mode."
   (setq nxml-prolog-end (point-min))
@@ -362,144 +359,89 @@ otherwise."
       (when (not savept)
         (back-to-indentation)))))
 
-(defun xquery-indent-via-nxml ()
-  "This function use nxml to calculate the indentation."
-  (let ((nxml-prolog-end (point-min))
-        (nxml-scan-end (copy-marker (point-min) nil)))
-    (nxml-compute-indent)))
-
-(defvar xquery-indent-regex
-  (concat "^\\s-*\\("
-          "typeswitch\\|for\\|let\\|where\\|order\\s-+by\\|return"
-          "\\|if\\|then\\|else"
-          "\\)\\s-*$")
-  "A regular expression indicating an indentable xquery sub-expression.")
-
 (defun xquery-calculate-indentation ()
   "Calculate the indentation for a line of XQuery.
 This function returns the column to which the current line should
 be indented."
-  (cl-destructuring-bind
-      (paren-level-bol
-       list-start-bol
-       sexp-start-bol
-       stringp-bol
-       comment-level-bol
-       quotep-bol
-       min-level-bol
-       bcommentp-bol
-       comment-start-bol
-       results-bol)
-      (save-excursion
-        (parse-partial-sexp
-         (point-min)
-         (line-beginning-position)))
-    (cl-destructuring-bind
-        (paren-level-eol
-         list-start-eol
-         sexp-start-eol
-         stringp-eol
-         comment-level-eol
-         quotep-eol
-         min-level-eol
-         bcommentp-eol
-         comment-start-eol
-         results-eol)
-        (save-excursion
-          (parse-partial-sexp
-           (point-min)
-           (line-end-position)))
-      (let* ((results-nxml
-              (when (or (looking-at "\\s-*<!--")
-                        (looking-at "\\s-*-->")
-                        (looking-at "\\s-*<\\sw+")
-                        (looking-at "\\s-*</?\\sw+"))
-                (xquery-indent-via-nxml)))
-             (nxml-indent
-              (when results-nxml
-                (/ results-nxml xquery-indent-size))))
-        (let* ((indent
-                (cond
-                 ((or (looking-back "\\`\\(\\s-*\\|\n*\\)*" nil)
-                      (line-starts-with "\\s-*\\'"))
-                  0)
-                 (comment-level-bol
-                  (+ 1 (save-excursion
-                         (goto-char comment-start-bol)
-                         (current-indentation))))
-                 ((and (line-starts-with "^\\s-*at\\s-+")
-                       (previous-line-starts-with"^\\s-*import\\s-+module\\s-+"))
-                  xquery-indent-size)
-                 ((and (line-starts-with "^\\s-*as\\s-+")
-                       (previous-line-starts-with "^\\s-*\\(define\\|declare\\)\\s-+function\\s-+"))
-                  xquery-indent-size)
-                 ((line-starts-with "^)")
-                  0)
-                 ((and (previous-line-starts-with "^\\s-*\\(define\\|declare\\)\\s-+function\\s-+")
-                       (line-starts-with "^\\s-*{"))
-                  (previous-line-indentation))
-                 ((line-starts-with "^\\s-*{")
-                  (+ (previous-line-indentation) xquery-mode-indent-width))
-                 ((previous-line-starts-with "^\\s-*{")
-                  (+ (previous-line-indentation) xquery-mode-indent-width))
-                 ((line-starts-with "^\\s-*}")
-                  (save-excursion
-                    (let ((close-counter 0)
-                          exit)
-                      (while (not exit)
-                        (let ((pos (re-search-backward "^\\s-*[{}]" nil t)))
-                          (cond ((not pos)
-                                 (setq exit 0))
-                                ((looking-at "^\\s-*}")
-                                 (cl-incf close-counter))
-                                ((and (looking-at "^\\s-*{") (zerop close-counter))
-                                 (back-to-indentation)
-                                 (setq exit (current-column)))
-                                ((looking-at "^\\s-*{")
-                                 (cl-decf close-counter)))))
-                      exit)))
-                 ((previous-line-starts-with "^\\s-*for\\s-*")
-                  (previous-line-indentation))
-                 ((previous-line-starts-with "^\\s-*(for\\s-*")
-                  (1+ (previous-line-indentation)))
-                 ((line-starts-with "^\\s-*else\\s-*")
-                  (save-excursion
-                    (search-backward "then")
-                    (current-column)))
-                 ((line-starts-with "^\\s-*then\\s-*")
-                  (save-excursion
-                    (search-backward "if")
-                    (current-column)))
-                 ((previous-line-starts-with "^\\s-*else\\s-*")
-                  (+ (previous-line-indentation) xquery-mode-indent-width))
-                 ((previous-line-starts-with "^\\s-*if\\s-*")
-                  (previous-line-indentation))
-                 ((previous-line-starts-with "^\\s-*then\\s-*")
-                  (+ (previous-line-indentation) xquery-mode-indent-width))
-                 ((previous-line-starts-with "^\\s-*return\\s-*")
-                  (+ (previous-line-indentation) xquery-mode-indent-width))
-                 ((previous-line-starts-with "^\\s-*let\\s-*")
-                  (previous-line-indentation))
-                 ((and (line-starts-with "^\\s-*or\\s-*")
-                       (previous-line-starts-with "^\\s-*where\\s-*"))
-                  (+ (previous-line-indentation) 6))
-                 ((and (line-starts-with "^\\s-*or\\s-*")
-                       (previous-line-starts-with "^\\s-*or\\s-*"))
-                  (previous-line-indentation))
-                 (t (* xquery-indent-size
-                       (cond
-                        ((and paren-level-bol
-                              paren-level-eol
-                              (= paren-level-bol (+ 1 paren-level-eol))
-                              (looking-at "^\\s-*\\s)[,;]?\\s-*$"))
-                         paren-level-eol)
-                        ((and nxml-indent
-                              paren-level-bol
-                              (> nxml-indent paren-level-bol))
-                         nxml-indent)
-                        (paren-level-bol paren-level-bol)
-                        (t 0)))))))
-          (min 70 indent))))))
+  (cond
+   ((or (looking-back "\\`\\(\\s-*\\|\n*\\)*" nil)
+        (line-starts-with "\\s-*\\'"))
+    0)
+   ;; TODO: open xml tag
+   ;; ((line-starts-with "\\s-*<\\sw+")
+   ;;  (save-excursion
+   ;;    (re-search-backward "<\\sw+")))
+   ;; TODO: close xml tag
+   ;; TODO: open xml comment
+   ;; TODO: close xml comment
+   ;; TODO: xquery comments indent
+   ((and (line-starts-with "^\\s-*at\\s-+")
+         (previous-line-starts-with"^\\s-*import\\s-+module\\s-+"))
+    xquery-mode-indent-width)
+   ((and (line-starts-with "^\\s-*as\\s-+")
+         (previous-line-starts-with "^\\s-*\\(define\\|declare\\)\\s-+function\\s-+"))
+    xquery-mode-indent-width)
+   ((line-starts-with "^)")
+    0)
+   ((and (previous-line-starts-with "^\\s-*\\(define\\|declare\\)\\s-+function\\s-+")
+         (line-starts-with "^\\s-*{"))
+    (previous-line-indentation))
+   ((line-starts-with "^\\s-*{")
+    (+ (previous-line-indentation) xquery-mode-indent-width))
+   ((previous-line-starts-with "^\\s-*{")
+    (+ (previous-line-indentation) xquery-mode-indent-width))
+   ((line-starts-with "^\\s-*}")
+    (save-excursion
+      (let ((close-counter 0)
+            exit)
+        (while (not exit)
+          (let ((pos (re-search-backward "^\\s-*[{}]" nil t)))
+            (cond ((not pos)
+                   (setq exit 0))
+                  ((looking-at "^\\s-*}")
+                   (cl-incf close-counter))
+                  ((and (looking-at "^\\s-*{") (zerop close-counter))
+                   (back-to-indentation)
+                   (setq exit (current-column)))
+                  ((looking-at "^\\s-*{")
+                   (cl-decf close-counter)))))
+        exit)))
+   ((previous-line-starts-with "^\\s-*for\\s-*")
+    (previous-line-indentation))
+   ((previous-line-starts-with "^\\s-*(for\\s-*")
+    (1+ (previous-line-indentation)))
+   ((line-starts-with "^\\s-*else\\s-*")
+    (save-excursion
+      (search-backward "then")
+      (current-column)))
+   ((line-starts-with "^\\s-*then\\s-*")
+    (save-excursion
+      (search-backward "if")
+      (current-column)))
+   ((previous-line-starts-with "^\\s-*else\\s-*")
+    (+ (previous-line-indentation) xquery-mode-indent-width))
+   ((previous-line-starts-with "^\\s-*if\\s-*")
+    (previous-line-indentation))
+   ((previous-line-starts-with "^\\s-*then\\s-*")
+    (+ (previous-line-indentation) xquery-mode-indent-width))
+   ((previous-line-starts-with "^\\s-*return\\s-*")
+    (+ (previous-line-indentation) xquery-mode-indent-width))
+   ((previous-line-starts-with "^\\s-*let\\s-*")
+    (previous-line-indentation))
+   ;; TODO: any logical operator
+   ;; TODO: previous line ends with logical operator
+   ((and (line-starts-with "^\\s-*or\\>")
+         (previous-line-starts-with "^\\s-*where\\>"))
+    (+ (previous-line-indentation) 6))
+   ((and (line-starts-with "^\\s-*or\\>")
+         (previous-line-starts-with "^\\s-*or\\>"))
+    (previous-line-indentation))
+   ((and (not (line-starts-with "^\\s-*or\\>"))
+         (previous-line-starts-with "^\\s-*or\\>"))
+    (save-excursion
+      (search-backward "where")
+      (current-column)))
+   (t (previous-line-indentation))))
 
 (defun line-starts-with (re)
   (save-excursion
