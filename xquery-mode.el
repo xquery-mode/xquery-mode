@@ -367,15 +367,6 @@ be indented."
    ((or (looking-back "\\`\\(\\s-*\\|\n*\\)*" nil)
         (line-starts-with "\\s-*\\'"))
     0)
-   ((previous-line-starts-with "^\\s-*<\\(\\sw+\\)")
-    (if (previous-line-ends-with
-         (format "</%s>\\s-*$" (match-string-no-properties 1)))
-        (previous-line-indentation)
-      (+ (previous-line-indentation) xquery-mode-indent-width)))
-   ;; TODO: close xml tag
-   ;; TODO: open xml comment
-   ;; TODO: close xml comment
-   ;; TODO: xquery comments indent
    ((and (line-starts-with "^\\s-*at\\s-+")
          (previous-line-starts-with"^\\s-*import\\s-+module\\s-+"))
     xquery-mode-indent-width)
@@ -407,6 +398,32 @@ be indented."
                   ((looking-at "^\\s-*{")
                    (cl-decf close-counter)))))
         exit)))
+   ((previous-line-starts-with "^\\s-*<\\(\\sw+\\)")
+    (if (previous-line-ends-with
+         (format "</%s>\\s-*$" (match-string-no-properties 1)))
+        (previous-line-indentation)
+      (+ (previous-line-indentation) xquery-mode-indent-width)))
+   ((line-starts-with "^\\s-*</\\(\\sw+\\)")
+    ;; TODO: remove this duplication
+    (save-excursion
+      (let ((close-counter 0)
+            (re (format "</?%s>" (match-string-no-properties 1)))
+            exit)
+        (while (not exit)
+          (let ((pos (re-search-backward re nil t)))
+            (cond ((not pos)
+                   (setq exit 0))
+                  ((looking-at-p "</")
+                   (cl-incf close-counter))
+                  ((looking-at-p "<")
+                   (if (zerop close-counter)
+                       (setq exit (current-indentation))
+                     (cl-decf close-counter))))))
+        exit)))
+   ;; TODO: close xml tag
+   ;; TODO: open xml comment
+   ;; TODO: close xml comment
+   ;; TODO: xquery comments indent
    ((previous-line-starts-with "^\\s-*\\<for\\>")
     (previous-line-indentation))
    ((previous-line-starts-with "^\\s-*(\\<for\\>")
