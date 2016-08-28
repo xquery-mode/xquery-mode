@@ -4,6 +4,7 @@
 
 ;;; Code:
 
+(require 'cl-lib)
 (require 'cask)
 
 (let ((source-directory (locate-dominating-file load-file-name "Cask")))
@@ -16,11 +17,11 @@
 
 (require 'xquery-mode)
 
-(defmacro define-indent-test (testname args doc before after)
+(defvar indent-test-count 0)
+
+(defmacro define-indent-test (before after)
   "Generate `ert' test for indentation."
-  (declare (indent 2))
-  `(ert-deftest ,(intern (concat "test-xquery-mode-" (symbol-name testname))) ,args
-     ,doc
+  `(ert-deftest ,(intern (format "test-xquery-mode-indent-%d" (cl-incf indent-test-count))) ()
      (with-current-buffer (generate-new-buffer "*fixture*")
        (insert ,before)
        (goto-char (point-min))

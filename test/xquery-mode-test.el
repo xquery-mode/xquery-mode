@@ -4,9 +4,7 @@
 
 ;;; Code:
 
-(define-indent-test function-body-first-line ()
-  "Indent first line of function body."
-  "
+(define-indent-test "
 declare function local:get-provider-group-membership($mpf-provider as element(provider))
 {
 				(for $group-membership in $mpf-provider/provider-group-membership
@@ -16,9 +14,7 @@ declare function local:get-provider-group-membership($mpf-provider as element(pr
   (for $group-membership in $mpf-provider/provider-group-membership
 ")
 
-(define-indent-test flwor-expression-in-brackets ()
-  "Indent FLWOR excression within square brackets."
-  "
+(define-indent-test "
 (for $group-membership in $mpf-provider/provider-group-membership
 				order by $group-membership/group-membership-effective-date descending
 " "
@@ -26,9 +22,7 @@ declare function local:get-provider-group-membership($mpf-provider as element(pr
  order by $group-membership/group-membership-effective-date descending
 ")
 
-(define-indent-test flwor-expression-keyword-on-next-line ()
-  "Indent line started with RETURN keyword to same column as previous line started with ORDER BY."
-  "
+(define-indent-test "
 								order by $group-membership/group-membership-effective-date descending
 								return $group-membership)[1]
 " "
@@ -36,9 +30,7 @@ order by $group-membership/group-membership-effective-date descending
 return $group-membership)[1]
 ")
 
-(define-indent-test inner-xml-tag ()
-  "Inner XML tags should indent with nesting."
-  "
+(define-indent-test "
 <html>
 <head>
 <title>Access points with an Organization TPI</title>
@@ -50,9 +42,7 @@ return $group-membership)[1]
     <meta>Hello</meta>
 ")
 
-(define-indent-test sequential-xml-tag ()
-  "Sequential XML tags must have same indentation column."
-  "
+(define-indent-test "
 <title>Access points with an Organization TPI</title>
 <style type=\"text/css\">
 " "
@@ -60,9 +50,7 @@ return $group-membership)[1]
 <style type=\"text/css\">
 ")
 
-(define-indent-test xml-tag-value ()
-  "Indent XML tag value differ then opening tag."
-  "
+(define-indent-test "
 <foo>
 baz
 </foo>" "
@@ -70,9 +58,7 @@ baz
   baz
 </foo>")
 
-(define-indent-test flwor-expression-open-bracket ()
-  "Indent FLWOR open curly bracket one level dipper."
-  "
+(define-indent-test "
 <tbody>
 {
 	for $tpi in fn:subsequence()
@@ -82,10 +68,7 @@ baz
     for $tpi in fn:subsequence()
 ")
 
-(define-indent-test flwor-expression-close-bracket ()
-  "Indent FLWOR close curly bracket same level as corresponding
-open bracket."
-  "
+(define-indent-test "
 <tbody>
 {
 	for $tpi in fn:subsequence()
@@ -97,10 +80,7 @@ open bracket."
   }
 ")
 
-(define-indent-test flwor-missed-open-curly-bracket ()
-  "Indent close curly bracket to the beginning of line if open
-curly bracket is missed."
-  "
+(define-indent-test "
 <html>
 		<body>
   }" "
@@ -108,9 +88,7 @@ curly bracket is missed."
   <body>
 }")
 
-(define-indent-test flwor-expression-nested-curly-brackets ()
-  "Indent nested curly brackets with dipper indentation level."
-  "
+(define-indent-test "
 <html><body>
 {
 	for $act in doc(\"hamlet.xml\")//ACT
@@ -146,9 +124,7 @@ curly bracket is missed."
 </body></html>
 ")
 
-(define-indent-test flwor-for-let-let-sequential ()
-  "Indent for let lest sequential expression to same column."
-  "
+(define-indent-test "
 {
 	for $tpi in fn:subsequence()
 	let $provider-id := $tpi/../../provider
@@ -160,9 +136,7 @@ curly bracket is missed."
   let $facility := $tpi/../../..
 ")
 
-(define-indent-test flwor-let-order-by-sequential ()
-  "Indent sequential let order by statements to the same column."
-  "
+(define-indent-test "
 {
 	for $tpi in fn:subsequence()
 	let $provider-id := $tpi/../../provider
@@ -174,9 +148,7 @@ curly bracket is missed."
   order by $provider-id/id
 ")
 
-(define-indent-test flwor-return-let-let-nested ()
-  "Indent let statement nested into return statement with dipper column."
-  "
+(define-indent-test "
 return
 let $mpf-provider := doc()/provider
 let $group-tpi := local:get-provider-group-membership()
@@ -186,9 +158,7 @@ return
   let $group-tpi := local:get-provider-group-membership()
 ")
 
-(define-indent-test flwor-multiline-if ()
-  "Indent multiline if statement."
-  "
+(define-indent-test "
 return
 let $mpf-tin := if ($mpf-group)
 then
@@ -204,10 +174,7 @@ return
                     $mpf-provider/provider-tax-id[1]/irs-number/text()
 ")
 
-(define-indent-test flwor-let-where-or-return ()
-  "Indent sequential let where return statements on same line.
-If where statement have multiline condition expression indent it dipper."
-   "
+(define-indent-test "
 let $mpf-tin := if ($mpf-group) then $mpf-group/provider-tax-id[1]/irs-number/text() else $mpf-provider/provider-tax-id[1]/irs-number/text()
 where $facility-npi != $mpf-facility-npi
 or $facility-tin != $mpf-tin
