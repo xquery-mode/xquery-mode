@@ -36,6 +36,7 @@
 ;; TODO use nxml for element completion?
 
 (require 'cl-lib)
+(require 'thingatpt)
 (require 'font-lock)
 (require 'nxml-mode)
 
@@ -475,16 +476,22 @@ be indented."
 (defun previous-line-starts-with (re)
   (save-excursion
     (forward-line -1)
+    (while (string-match-p "\\`\\s-*\n?\\'" (thing-at-point 'line))
+      (forward-line -1))
     (line-starts-with re)))
 
 (defun previous-line-ends-with (re)
   (save-excursion
     (forward-line -1)
+    (while (string-match-p "\\`\\s-*\n?\\'" (thing-at-point 'line))
+      (forward-line -1))
     (line-ends-with re)))
 
 (defun previous-line-indentation ()
   (save-excursion
     (forward-line -1)
+    (while (string-match-p "\\`\\s-*\n?\\'" (thing-at-point 'line))
+      (forward-line -1))
     (current-indentation)))
 
 (provide 'xquery-mode)
