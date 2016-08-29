@@ -222,7 +222,7 @@ declare namespace bk = \"http://www.marklogic.com/ns/gs-books\";
     <title>Database dump</title>
   </head>
   <body>
-  <b>XML Content</b>
+    <b>XML Content</b>
     {
       for $book in doc(\"books.xml\")/bk:books/bk:book
       return

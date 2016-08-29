@@ -407,8 +407,6 @@ be indented."
    ((and (previous-line-starts-with "^\\s-*\\(define\\|declare\\)\\s-+function\\s-+")
          (line-starts-with "^\\s-*{"))
     (previous-line-indentation))
-   ((line-starts-with "^\\s-*{")
-    (+ (previous-line-indentation) xquery-mode-indent-width))
    ((previous-line-starts-with "^\\s-*{")
     (+ (previous-line-indentation) xquery-mode-indent-width))
    ((line-starts-with "^\\s-*}")
