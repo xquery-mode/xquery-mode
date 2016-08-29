@@ -427,11 +427,6 @@ be indented."
                   ((looking-at "^\\s-*{")
                    (cl-decf close-counter)))))
         exit)))
-   ((previous-line-starts-with "^\\s-*<\\(\\sw+\\)")
-    (if (previous-line-ends-with
-         (format "</%s>\\s-*$" (match-string-no-properties 1)))
-        (previous-line-indentation)
-      (+ (previous-line-indentation) xquery-mode-indent-width)))
    ((line-starts-with "^\\s-*</\\(\\sw+\\)")
     ;; TODO: remove this duplication
     (save-excursion
@@ -449,6 +444,11 @@ be indented."
                        (setq exit (current-indentation))
                      (cl-decf close-counter))))))
         exit)))
+   ((previous-line-starts-with "^\\s-*<\\(\\sw+\\)")
+    (if (previous-line-ends-with
+         (format "</%s>\\s-*$" (match-string-no-properties 1)))
+        (previous-line-indentation)
+      (+ (previous-line-indentation) xquery-mode-indent-width)))
    ;; TODO: close xml tag
    ;; TODO: open xml comment
    ;; TODO: close xml comment
