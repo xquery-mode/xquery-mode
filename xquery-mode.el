@@ -538,6 +538,30 @@ be indented."
       (forward-line -1))
     (current-indentation)))
 
+(defun xquery-mode-parse-partial-sexp ()
+  "Return nesting level for each line in the region."
+  (save-excursion
+    (let* ((opposite '((")" . "(") ("}" . "{")))
+           (open-re "\\({\\)\\|\\((\\)\\|<\\([[:alpha:]][[:alnum:]]*\\)[^>]*?>")
+           (close-re "\\(}\\)\\|\\()\\)\\|</\\([[:alnum:]]+?\\)>")
+           (re (concat open-re "\\|" close-re))
+           (matches '())
+           (limit (point))
+           result pos exit)
+      (goto-char (point-min))
+      (while (not exit)
+        (setq pos (re-search-forward re limit t))
+        (if (not pos)
+            (setq exit t)
+          (let ((last-match (car (delq nil (mapcar #'match-string-no-properties '(1 2 3 4 5 6))))))
+            (cond ((looking-back open-re nil)
+                   (push (list last-match) matches))
+                  ((looking-back close-re nil)
+                   (let* ((key (or (cdr (assoc last-match opposite)) last-match))
+                          (struct (assoc key matches)))
+                     (setq matches (delq struct matches))))))))
+      matches)))
+
 (provide 'xquery-mode)
 
 ;;; xquery-mode.el ends here
