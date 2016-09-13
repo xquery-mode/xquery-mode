@@ -17,6 +17,8 @@
 
 (require 'xquery-mode)
 
+(setq xquery-mode-indent-style 'native)
+
 (defvar indent-test-count 0)
 
 (defmacro define-indent-test (before after)
