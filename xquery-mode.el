@@ -46,11 +46,13 @@
 
 (defun turn-on-xquery-tab-to-tab-indent ()
   "Turn on tab-to-tab XQuery-mode indentation."
-  (define-key xquery-mode-map (kbd "TAB") 'tab-to-tab-stop))
+  (define-key xquery-mode-map (kbd "TAB") 'tab-to-tab-stop)
+  (kill-local-variable 'indent-line-function))
 
 (defun turn-on-xquery-native-indent ()
   "Turn on native XQuery-mode indentation."
-  (define-key xquery-mode-map (kbd "TAB") 'indent-for-tab-command))
+  (define-key xquery-mode-map (kbd "TAB") 'indent-for-tab-command)
+  (set (make-local-variable 'indent-line-function) 'xquery-indent-line))
 
 (defun toggle-xquery-mode-indent-style ()
   "Switch to the next indentation style."
@@ -70,7 +72,7 @@
 (defcustom xquery-mode-hook nil
   "Hook run after entering XQuery mode."
   :type 'hook
-  :options '(turn-on-xquery-indent turn-on-font-lock))
+  :options '(turn-on-font-lock))
 
 (defvar xquery-toplevel-bovine-table nil
   "Top level bovinator table.")
@@ -122,9 +124,13 @@
 (define-derived-mode xquery-mode fundamental-mode "XQuery"
   "A major mode for W3C XQuery 1.0"
   ;; indentation
-  (xquery-set-indent-function)
+  (setq nxml-prolog-end (point-min))
+  (setq nxml-scan-end (copy-marker (point-min) nil))
+  (make-local-variable 'forward-sexp-function)
+  (setq forward-sexp-function 'xquery-forward-sexp)
+  (local-set-key "/" 'nxml-electric-slash)
   (setq tab-width xquery-mode-indent-width)
-  (set (make-local-variable 'indent-line-function) 'xquery-indent-line)
+  (xquery-mode-activate-indent-style)
   ;; apparently it's important to set at least an empty list up-front
   (set (make-local-variable 'font-lock-defaults) '((nil)))
   (set (make-local-variable 'comment-start) xquery-mode-comment-start)
@@ -336,15 +342,6 @@ otherwise."
     (if (looking-back ">\\s-*")
         (nxml-forward-balanced-item arg)
       (let ((forward-sexp-function nil)) (forward-sexp arg)))))
-
-(defun xquery-set-indent-function ()
-  "Set the indent function for xquery mode."
-  (setq nxml-prolog-end (point-min))
-  (setq nxml-scan-end (copy-marker (point-min) nil))
-  (set (make-local-variable 'indent-line-function) 'xquery-indent-line)
-  (make-local-variable 'forward-sexp-function)
-  (setq forward-sexp-function 'xquery-forward-sexp)
-  (local-set-key "/" 'nxml-electric-slash))
 
 (defun xquery-indent-line ()
   "Indent current line as xquery code."
