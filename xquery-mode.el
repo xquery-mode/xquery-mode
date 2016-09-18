@@ -432,10 +432,12 @@ be indented."
     (save-excursion
       (re-search-backward "\\<where\\>")
       (current-column)))
-   ((search-backward-unclosed "{" "}")
-    (+ (search-backward-unclosed "{" "}") xquery-mode-indent-width))
-   ((search-backward-unclosed "(" ")")
-    (1+ (search-backward-unclosed "(" ")")))
+   ((search-backward-first-unclosed)
+    (save-excursion
+      (goto-char (search-backward-first-unclosed))
+      (if (looking-at-p "(")
+          (1+ (current-column))
+        (+ (current-column) xquery-mode-indent-width))))
    (t (previous-line-indentation))))
 
 (defun line-starts-with (re)
@@ -500,6 +502,24 @@ be indented."
                            result (apply func nil))
                    (cl-decf close-counter))))))
       result)))
+
+(defun search-backward-first-unclosed ()
+  (let ((matching '(("(" . ")") ("{" . "}")))
+        tags)
+    (save-excursion
+      (while (re-search-backward "(\\|{\\|<[^/> \t]+\\>" nil t)
+        (let* ((open (match-string-no-properties 0))
+               (closing (cdr (assoc open matching))))
+          (unless closing
+            (setq open (concat open "[^>]*>")
+                  closing (concat "</" (substring open 1))))
+          (push (cons open closing) tags))))
+    (car (sort (delq nil
+                     (mapcar (lambda (x)
+                               (cl-destructuring-bind (open . closing) x
+                                 (search-backward-unclosed open closing :func #'point)))
+                             tags))
+               #'>))))
 
 (defun xquery-mode-indent-region (start end)
   "Indent given region.
