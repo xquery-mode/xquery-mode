@@ -444,6 +444,20 @@ let $mpf-group-entry := if ($group-tpi) then
 return
 ")
 
+(define-indent-test "
+(
+if ($mpf-group-membership) then
+()
+else
+\"claim indicates GROUP facility but TPI does not point to provider with provider-group-membership record\",
+" "
+(
+ if ($mpf-group-membership) then
+   ()
+ else
+   \"claim indicates GROUP facility but TPI does not point to provider with provider-group-membership record\",
+")
+
 (provide 'xquery-mode-test)
 
 ;;; xquery-mode-test.el ends here
