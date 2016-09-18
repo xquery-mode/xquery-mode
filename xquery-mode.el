@@ -472,6 +472,10 @@ be indented."
       (+ (current-column) xquery-mode-indent-width)))
    ((previous-line-starts-with "^\\s-*\\<if\\>")
     (previous-line-indentation))
+   ((line-starts-with "^\\s-*\\<return\\>")
+    (save-excursion
+      (re-search-backward "\\<for\\>\\|\\<let\\>\\|\\<where\\>\\|\\<order\\>\\s-+\\<by\\>")
+      (current-column)))
    ((previous-line-starts-with "^\\s-*\\<return\\>")
     (+ (previous-line-indentation) xquery-mode-indent-width))
    ((previous-line-starts-with "^\\s-*\\<let\\>")

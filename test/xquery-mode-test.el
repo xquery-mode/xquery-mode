@@ -430,6 +430,20 @@ let $mpf-group-entry := if ($group-tpi) then
                           ()
 ")
 
+(define-indent-test "
+let $mpf-group-entry := if ($group-tpi) then
+                          doc(concat('/tx-mpf/', substring($group-tpi, 1, 7), '.xml'))/group/provider[tpi = $group-tpi]
+                        else
+                          ()
+                          return
+" "
+let $mpf-group-entry := if ($group-tpi) then
+                          doc(concat('/tx-mpf/', substring($group-tpi, 1, 7), '.xml'))/group/provider[tpi = $group-tpi]
+                        else
+                          ()
+return
+")
+
 (provide 'xquery-mode-test)
 
 ;;; xquery-mode-test.el ends here
