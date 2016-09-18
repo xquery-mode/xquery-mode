@@ -458,6 +458,24 @@ else
    \"claim indicates GROUP facility but TPI does not point to provider with provider-group-membership record\",
 ")
 
+(define-indent-test "
+    if ($facility-type = \"GROUP\") then
+      (
+       if ($mpf-group-entry/provider-tax-id/irs-number != $facility/c:ein) then
+         \"billing provider tax ID does not match EIN in MPF\"
+       else
+         ()
+)
+" "
+if ($facility-type = \"GROUP\") then
+  (
+   if ($mpf-group-entry/provider-tax-id/irs-number != $facility/c:ein) then
+     \"billing provider tax ID does not match EIN in MPF\"
+   else
+     ()
+  )
+")
+
 (provide 'xquery-mode-test)
 
 ;;; xquery-mode-test.el ends here
