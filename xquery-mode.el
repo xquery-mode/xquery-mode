@@ -376,14 +376,14 @@ be indented."
    ((and (previous-line-starts-with "\\(\\<define\\>\\|\\<declare\\>\\)\\s-+\\<function\\>\\s-+")
          (previous-line-ends-with "{"))
     (+ (previous-line-indentation) xquery-mode-indent-width))
-   ((previous-line-starts-with "{")
-    (+ (previous-line-indentation) xquery-mode-indent-width))
+   ((line-starts-with ")")
+    (search-backward-unclosed "(" ")"))
    ((line-starts-with "}")
     (search-backward-unclosed "{" "}"))
-   ((line-starts-with "</\\(\\sw+\\)")
+   ((line-starts-with "</\\([^>]+\\)>")
     ;; TODO: remove this duplication
     (let ((tag (match-string-no-properties 1)))
-      (search-backward-unclosed (format "<%s>" tag) (format "</%s>" tag) :func #'current-indentation)))
+      (search-backward-unclosed (format "<%s[^>]*>" tag) (format "</%s>" tag) :func #'current-indentation)))
    ((previous-line-starts-with "<\\(\\sw+\\)")
     (if (previous-line-ends-with
          (format "</%s>" (match-string-no-properties 1)))
@@ -395,8 +395,6 @@ be indented."
    ;; TODO: xquery comments indent
    ((previous-line-starts-with "\\<for\\>")
     (previous-line-indentation))
-   ((previous-line-starts-with "(\\<for\\>")
-    (1+ (previous-line-indentation)))
    ((line-starts-with "\\<else\\>")
     (search-backward-unclosed "\\<if\\>" "\\<else\\>"))
    ((line-starts-with "\\<then\\>")
@@ -434,12 +432,8 @@ be indented."
     (save-excursion
       (re-search-backward "\\<where\\>")
       (current-column)))
-   ((previous-line-ends-with "}")
-    (save-excursion
-      (search-backward "}")
-      (search-backward-unclosed "{" "}" :func #'current-indentation)))
-   ((line-starts-with ")")
-    (search-backward-unclosed "(" ")"))
+   ((search-backward-unclosed "{" "}")
+    (+ (search-backward-unclosed "{" "}") xquery-mode-indent-width))
    ((search-backward-unclosed "(" ")")
     (1+ (search-backward-unclosed "(" ")")))
    (t (previous-line-indentation))))
