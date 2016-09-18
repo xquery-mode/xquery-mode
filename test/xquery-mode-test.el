@@ -351,40 +351,40 @@ declare function local:validate-with-tpi($tpi as xs:string, $claim as element())
                             ()
   return
     if ($facility-type = \"GROUP\") then
-       (
-        (: GROUP checks :)
-        if ($mpf-group-membership) then
-          ()
-         else
-          \"claim indicates GROUP facility but TPI does not point to provider with provider-group-membership record\",
+      (
+       (: GROUP checks :)
+       if ($mpf-group-membership) then
+         ()
+       else
+         \"claim indicates GROUP facility but TPI does not point to provider with provider-group-membership record\",
 
-        if ($mpf-entry/npi-api/npi-api != $provider/c:npi) then
-           \"rendering provider NPI does not match MPF npi-api record\"
-        else
-           (),
+       if ($mpf-entry/npi-api/npi-api != $provider/c:npi) then
+         \"rendering provider NPI does not match MPF npi-api record\"
+       else
+         (),
 
-        if ($mpf-group-membership/group-npi-api != $facility/c:npi) then
-           \"billing provider NPI in claim does not match NPI in MPF group membership record\"
-         else
-           (),
+       if ($mpf-group-membership/group-npi-api != $facility/c:npi) then
+         \"billing provider NPI in claim does not match NPI in MPF group membership record\"
+       else
+         (),
 
-         if ($mpf-group-entry/provider-tax-id/irs-number != $facility/c:ein) then
-           \"billing provider tax ID does not match EIN in MPF\"
-          else
-           ()
-       )
-     else
-       (
-        (: INDIVIDUAL checks :)
-        if ($mpf-group-membership) then
-          \"claim indicates INDIVIDUAL facility but TPI points to provider with provider-group-membership record\"
-        else
-          (),
+       if ($mpf-group-entry/provider-tax-id/irs-number != $facility/c:ein) then
+         \"billing provider tax ID does not match EIN in MPF\"
+       else
+         ()
+      )
+    else
+      (
+       (: INDIVIDUAL checks :)
+       if ($mpf-group-membership) then
+         \"claim indicates INDIVIDUAL facility but TPI points to provider with provider-group-membership record\"
+       else
+         (),
 
-        if ($mpf-entry/npi-api/npi-api != $provider/c:npi) then
-           \"rendering provider NPI does not match MPF npi-api record\"
-        else
-          ())
+       if ($mpf-entry/npi-api/npi-api != $provider/c:npi) then
+         \"rendering provider NPI does not match MPF npi-api record\"
+       else
+         ())
 };
 
 <claim-validations>
