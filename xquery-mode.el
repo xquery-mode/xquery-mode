@@ -379,7 +379,7 @@ be indented."
    ((line-starts-with ")")
     (search-backward-unclosed "(" ")"))
    ((line-starts-with "}")
-    (search-backward-unclosed "{" "}"))
+    (search-backward-unclosed "{" "}" :func #'current-indentation))
    ((line-starts-with "</\\([^>]+\\)>")
     ;; TODO: remove this duplication
     (let ((tag (match-string-no-properties 1)))
