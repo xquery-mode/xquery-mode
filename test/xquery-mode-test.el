@@ -543,6 +543,7 @@ else
   }
 </claim-validations>
 ")
+
 (provide 'xquery-mode-test)
 
 ;;; xquery-mode-test.el ends here
