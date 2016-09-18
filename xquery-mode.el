@@ -457,17 +457,19 @@ be indented."
     (1+ (previous-line-indentation)))
    ((line-starts-with "^\\s-*\\<else\\>")
     (save-excursion
-      (search-backward "then")
-      (current-indentation)))
+      (re-search-backward "\\<if\\>")
+      (current-column)))
    ((line-starts-with "^\\s-*\\<then\\>")
     (save-excursion
-      (search-backward "if")
+      (re-search-backward "\\<if\\>")
       (current-column)))
    ((previous-line-starts-with "^\\s-*\\<else\\>")
     (+ (previous-line-indentation) xquery-mode-indent-width))
    ((or (previous-line-starts-with "^\\s-*\\<then\\>")
         (previous-line-ends-with "\\<then\\>\\s-*$"))
-    (+ (previous-line-indentation) xquery-mode-indent-width))
+    (save-excursion
+      (re-search-backward "\\<if\\>")
+      (+ (current-column) xquery-mode-indent-width)))
    ((previous-line-starts-with "^\\s-*\\<if\\>")
     (previous-line-indentation))
    ((previous-line-starts-with "^\\s-*\\<return\\>")
@@ -486,7 +488,7 @@ be indented."
    ((and (not (line-starts-with "^\\s-*\\<or\\>"))
          (previous-line-starts-with "^\\s-*\\<or\\>"))
     (save-excursion
-      (search-backward "where")
+      (re-search-backward "\\<where\\>")
       (current-column)))
    ((previous-line-ends-with "}\\s-*$")
     (let ((close-counter 0)
@@ -538,6 +540,20 @@ be indented."
     (while (string-match-p "\\`\\s-*\n?\\'" (thing-at-point 'line))
       (forward-line -1))
     (current-indentation)))
+
+(defun previous-line-beginning-possition ()
+  (save-excursion
+    (forward-line -1)
+    (while (string-match-p "\\`\\s-*\n?\\'" (thing-at-point 'line))
+      (forward-line -1))
+    (line-beginning-position)))
+
+(defun previous-line-end-possition ()
+  (save-excursion
+    (forward-line -1)
+    (while (string-match-p "\\`\\s-*\n?\\'" (thing-at-point 'line))
+      (forward-line -1))
+    (line-end-position)))
 
 (defun xquery-mode-indent-region (start end)
   "Indent given region.

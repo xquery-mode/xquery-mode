@@ -418,6 +418,18 @@ declare function local:validate-with-tpi($tpi as xs:string, $claim as element())
   let $facility := $access-point/c:facility
 ")
 
+(define-indent-test "
+let $mpf-group-entry := if ($group-tpi) then
+  doc(concat('/tx-mpf/', substring($group-tpi, 1, 7), '.xml'))/group/provider[tpi = $group-tpi]
+else
+  ()
+" "
+let $mpf-group-entry := if ($group-tpi) then
+                          doc(concat('/tx-mpf/', substring($group-tpi, 1, 7), '.xml'))/group/provider[tpi = $group-tpi]
+                        else
+                          ()
+")
+
 (provide 'xquery-mode-test)
 
 ;;; xquery-mode-test.el ends here
