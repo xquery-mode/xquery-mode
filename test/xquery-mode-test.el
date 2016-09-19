@@ -712,6 +712,22 @@ return map:new((
 <format>encounters</format>
 ")
 
+(define-indent-test "
+{
+if ($the-doc/legacy:description) then
+<description>{ $the-doc/legacy:description }</description>
+else
+()
+}
+" "
+{
+  if ($the-doc/legacy:description) then
+    <description>{ $the-doc/legacy:description }</description>
+  else
+    ()
+}
+")
+
 (provide 'xquery-mode-test)
 
 ;;; xquery-mode-test.el ends here

@@ -384,13 +384,12 @@ be indented."
     ;; TODO: remove this duplication
     (let ((tag (match-string-no-properties 1)))
       (search-backward-unclosed (format "<%s[^>]*>" tag) (format "</%s>" tag) :func #'current-indentation)))
-   ((previous-line-starts-with "<\\([^/> \t]+\\>\\)")
-    (let* ((tag (match-string-no-properties 1))
-           (unmatched (search-backward-unclosed (format "<%s\\>[^>]*>" tag) (format "</%s>" tag) :func #'point)))
-      (if (and unmatched
-               (<= (previous-line-beginning-possition) unmatched))
-          (+ (previous-line-indentation) xquery-mode-indent-width)
-        (previous-line-indentation))))
+   ((and (previous-line-starts-with "<\\([^/> \t]+\\>\\)")
+         (let* ((tag (match-string-no-properties 1))
+                (unmatched (search-backward-unclosed (format "<%s\\>[^>]*>" tag) (format "</%s>" tag) :func #'point)))
+           (and unmatched
+                (<= (previous-line-beginning-possition) unmatched))))
+    (+ (previous-line-indentation) xquery-mode-indent-width))
    ;; TODO: close xml tag
    ;; TODO: open xml comment
    ;; TODO: close xml comment
