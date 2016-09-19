@@ -414,7 +414,8 @@ be indented."
     (save-excursion
       (re-search-backward "\\<for\\>\\|\\<let\\>\\|\\<where\\>\\|\\<order\\>\\s-+\\<by\\>")
       (current-column)))
-   ((previous-line-starts-with "\\<return\\>")
+   ((and (previous-line-starts-with "\\<return\\>")
+         (previous-line-ends-with "\\<return\\>"))
     (+ (previous-line-indentation) xquery-mode-indent-width))
    ((previous-line-starts-with "\\<let\\>")
     (previous-line-indentation))
