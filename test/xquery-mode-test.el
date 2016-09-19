@@ -704,6 +704,14 @@ return map:new((
                 map:entry(\"value\",
 ")
 
+(define-indent-test "
+<loaded-at>{ $current-date-time }</loaded-at>
+<format>encounters</format>
+" "
+<loaded-at>{ $current-date-time }</loaded-at>
+<format>encounters</format>
+")
+
 (provide 'xquery-mode-test)
 
 ;;; xquery-mode-test.el ends here

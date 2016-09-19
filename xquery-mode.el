@@ -373,22 +373,24 @@ be indented."
    ((and (previous-line-starts-with "\\(\\<define\\>\\|\\<declare\\>\\)\\s-+\\<function\\>\\s-+")
          (line-starts-with "{"))
     (previous-line-indentation))
-   ((and (previous-line-starts-with "\\(\\<define\\>\\|\\<declare\\>\\)\\s-+\\<function\\>\\s-+")
+   ((and (previous-line-starts-with "\\(\\<define\\>\\|\\<declare\\>\\)\\s-+\\<function\\>\\s-+") ;; FIXME: ?
          (previous-line-ends-with "{"))
     (+ (previous-line-indentation) xquery-mode-indent-width))
    ((line-starts-with ")")
     (search-backward-unclosed "(" ")"))
    ((line-starts-with "}")
     (search-backward-unclosed "{" "}" :func #'current-indentation))
-   ((line-starts-with "</\\([^>]+\\)>")
+   ((line-starts-with "</\\([^>]+\\)>") ;; FIXME: ?
     ;; TODO: remove this duplication
     (let ((tag (match-string-no-properties 1)))
       (search-backward-unclosed (format "<%s[^>]*>" tag) (format "</%s>" tag) :func #'current-indentation)))
-   ((previous-line-starts-with "<\\(\\sw+\\)")
-    (if (previous-line-ends-with
-         (format "</%s>" (match-string-no-properties 1)))
-        (previous-line-indentation)
-      (+ (previous-line-indentation) xquery-mode-indent-width)))
+   ((previous-line-starts-with "<\\([^/> \t]+\\>\\)")
+    (let* ((tag (match-string-no-properties 1))
+           (unmatched (search-backward-unclosed (format "<%s\\>[^>]*>" tag) (format "</%s>" tag) :func #'point)))
+      (if (and unmatched
+               (<= (previous-line-beginning-possition) unmatched))
+          (+ (previous-line-indentation) xquery-mode-indent-width)
+        (previous-line-indentation))))
    ;; TODO: close xml tag
    ;; TODO: open xml comment
    ;; TODO: close xml comment
