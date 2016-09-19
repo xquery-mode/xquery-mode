@@ -688,9 +688,9 @@ declare function lwcc:transform($content as map:map, $context as map:map) as map
                                              ()
                                          }
                                        </encounters-file>)))
-   return ($file-data,
-           lwcc:extract-file-metadata($the-doc, $params),
-           lwcc:extract-encounter-documents($the-doc/legacy:claims/legacy:claim, $file-path))
+  return ($file-data,
+          lwcc:extract-file-metadata($the-doc, $params),
+          lwcc:extract-encounter-documents($the-doc/legacy:claims/legacy:claim, $file-path))
 };
 ")
 
