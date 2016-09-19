@@ -418,8 +418,6 @@ be indented."
    ((and (previous-line-starts-with "\\<return\\>")
          (previous-line-ends-with "\\<return\\>"))
     (+ (previous-line-indentation) xquery-mode-indent-width))
-   ((previous-line-starts-with "\\<let\\>")
-    (previous-line-indentation))
    ;; TODO: any logical operator
    ;; TODO: previous line ends with logical operator
    ;; TODO: protect from wrong "where" match as part of function name
@@ -439,7 +437,7 @@ be indented."
       (goto-char (search-backward-first-unclosed))
       (if (looking-at-p "(")
           (1+ (current-column))
-        (+ (current-column) xquery-mode-indent-width))))
+        (+ (current-indentation) xquery-mode-indent-width))))
    (t (previous-line-indentation))))
 
 (defun line-starts-with (re)

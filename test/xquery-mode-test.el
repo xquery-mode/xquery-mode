@@ -728,6 +728,13 @@ else
 }
 ")
 
+(define-indent-test "
+  let $file-data := map:new((
+  map:entry(\"uri\", $file-path || \".xml\"),
+" "
+let $file-data := map:new((
+                           map:entry(\"uri\", $file-path || \".xml\"),
+")
 (provide 'xquery-mode-test)
 
 ;;; xquery-mode-test.el ends here
