@@ -380,17 +380,10 @@ be indented."
     (search-backward-unclosed "(" ")"))
    ((line-starts-with "}")
     (search-backward-unclosed "{" "}" :func #'current-indentation))
-   ((line-starts-with "</\\([^>]+\\)>") ;; FIXME: ?
-    ;; TODO: remove this duplication
+   ((line-starts-with "</\\([^>]+\\)>")
+    ;; FIXME: ?
     (let ((tag (match-string-no-properties 1)))
-      (search-backward-unclosed (format "<%s[^>]*>" tag) (format "</%s>" tag) :func #'current-indentation)))
-   ((and (previous-line-starts-with "<\\([^/> \t]+\\>\\)")
-         (let* ((tag (match-string-no-properties 1))
-                (unmatched (search-backward-unclosed (format "<%s\\>[^>]*>" tag) (format "</%s>" tag) :func #'point)))
-           (and unmatched
-                (<= (previous-line-beginning-possition) unmatched))))
-    (+ (previous-line-indentation) xquery-mode-indent-width))
-   ;; TODO: close xml tag
+      (search-backward-unclosed (format "<%s[^>]*>" tag) (format "</%s>" tag))))
    ;; TODO: open xml comment
    ;; TODO: close xml comment
    ;; TODO: xquery comments indent
@@ -415,12 +408,10 @@ be indented."
     (save-excursion
       (re-search-backward "\\<for\\>\\|\\<let\\>\\|\\<where\\>\\|\\<order\\>\\s-+\\<by\\>")
       (current-column)))
-   ((and (previous-line-starts-with "\\<return\\>")
-         (previous-line-ends-with "\\<return\\>"))
+   ((previous-line-starts-with "\\<return\\>\\s-*$")
     (+ (previous-line-indentation) xquery-mode-indent-width))
    ;; TODO: any logical operator
    ;; TODO: previous line ends with logical operator
-   ;; TODO: protect from wrong "where" match as part of function name
    ((and (line-starts-with "\\<or\\>")
          (previous-line-starts-with "\\<where\\>"))
     (+ (previous-line-indentation) 6))
@@ -435,9 +426,13 @@ be indented."
    ((search-backward-first-unclosed)
     (save-excursion
       (goto-char (search-backward-first-unclosed))
-      (if (looking-at-p "(")
-          (1+ (current-column))
-        (+ (current-indentation) xquery-mode-indent-width))))
+      (cond
+       ((looking-at-p "(")
+        (1+ (current-column)))
+       ((looking-at-p "<")
+        (+ (current-column) xquery-mode-indent-width))
+       ((looking-at-p "{")
+        (+ (current-indentation) xquery-mode-indent-width)))))
    (t (previous-line-indentation))))
 
 (defun line-starts-with (re)
