@@ -791,10 +791,11 @@ declare function lwcc:extract-bu-documents-277($tx as node(),$tx-path as xs:stri
   return map:new((
                   map:entry(\"uri\",$tx-path || \"/\" || $idx || \".xml\"),
                   map:entry(\"value\",document {functx:change-element-ns-deep($unit,
-                                                                              \"http://lambdawerk.com/schema/x12n-xml/277ca\",
-                                                                              \"ca\")})))
+                                                                            \"http://lambdawerk.com/schema/x12n-xml/277ca\",
+                                                                            \"ca\")})))
 };
 ")
+
 (provide 'xquery-mode-test)
 
 ;;; xquery-mode-test.el ends here
