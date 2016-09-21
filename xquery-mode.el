@@ -373,9 +373,6 @@ be indented."
    ((and (previous-line-starts-with "\\(\\<define\\>\\|\\<declare\\>\\)\\s-+\\<function\\>\\s-+")
          (line-starts-with "{"))
     (previous-line-indentation))
-   ((and (previous-line-starts-with "\\(\\<define\\>\\|\\<declare\\>\\)\\s-+\\<function\\>\\s-+") ;; FIXME: ?
-         (previous-line-ends-with "{"))
-    (+ (previous-line-indentation) xquery-mode-indent-width))
    ((line-starts-with ")")
     (search-backward-unclosed "(" ")"))
    ((line-starts-with "}")
