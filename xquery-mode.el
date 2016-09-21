@@ -427,8 +427,10 @@ be indented."
         (1+ (current-column)))
        ((looking-at-p "<")
         (+ (current-column) xquery-mode-indent-width))
+       ((looking-at-p "{\\s-*$")
+        (+ (current-indentation) xquery-mode-indent-width))
        ((looking-at-p "{")
-        (+ (current-indentation) xquery-mode-indent-width)))))
+        (1+ (current-column))))))
    (t (previous-line-indentation))))
 
 (defun line-starts-with (re)
