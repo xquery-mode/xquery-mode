@@ -378,9 +378,8 @@ be indented."
    ((line-starts-with "}")
     (search-backward-unclosed "{" "}" :func #'current-indentation))
    ((line-starts-with "</\\([^>]+\\)>")
-    ;; FIXME: ?
     (let ((tag (match-string-no-properties 1)))
-      (search-backward-unclosed (format "<%s[^>]*>" tag) (format "</%s>" tag))))
+      (search-backward-unclosed (format "<%s\\>[^>]*>" tag) (format "</%s>" tag))))
    ;; TODO: open xml comment
    ;; TODO: close xml comment
    ;; TODO: xquery comments indent
