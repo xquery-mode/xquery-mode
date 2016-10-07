@@ -365,16 +365,23 @@ be indented."
         (line-starts-with "\\'"))
     0)
    ((and (line-starts-with "\\<at\\>\\s-+")
-         (previous-line-starts-with"\\<import\\>\\s-+\\<module\\>\\s-+"))
-    xquery-mode-indent-width)
-   ((and (line-starts-with "\\<as\\>\\s-+")
-         (previous-line-starts-with "\\(\\<define\\>\\|\\<declare\\>\\)\\s-+\\<function\\>\\s-+"))
-    xquery-mode-indent-width)
+         (or (previous-line-starts-with"\\<import\\>\\s-+\\<module\\>\\s-+")
+             (previous-line-starts-with "\\(\\<define\\>\\|\\<declare\\>\\)\\s-+\\<function\\>\\s-+")))
+    (+ (previous-line-indentation) xquery-mode-indent-width))
+   ((and (previous-line-starts-with "\\<at\\>\\s-+")
+         (previous-line-ends-with ";"))
+    (- (previous-line-indentation) xquery-mode-indent-width))
    ((and (previous-line-starts-with "\\(\\<define\\>\\|\\<declare\\>\\)\\s-+\\<function\\>\\s-+")
          (line-starts-with "{"))
     (previous-line-indentation))
    ((line-starts-with ")")
-    (search-backward-unclosed "(" ")"))
+    (search-backward-unclosed
+     "(" ")"
+     :func #'(lambda ()
+               (if (looking-back "\\(\\<define\\>\\|\\<declare\\>\\)\\s-+\\<function\\>\\s-+.*"
+                                 (line-beginning-position))
+                   (current-indentation)
+                 (current-column)))))
    ((line-starts-with "}")
     (search-backward-unclosed "{" "}" :func #'current-indentation))
    ((line-starts-with "</\\([^>]+\\)>")
@@ -385,6 +392,12 @@ be indented."
    ;; TODO: xquery comments indent
    ((previous-line-starts-with "\\<for\\>")
     (previous-line-indentation))
+   ((line-starts-with "\\<return\\>")
+    (save-excursion
+      (re-search-backward "\\<for\\>\\|\\<let\\>\\|\\<where\\>\\|\\<order\\>\\s-+\\<by\\>")
+      (current-column)))
+   ((previous-line-starts-with "\\<return\\>\\s-*$")
+    (+ (previous-line-indentation) xquery-mode-indent-width))
    ((line-starts-with "\\<else\\>")
     (search-backward-unclosed "\\<if\\>" "\\<else\\>"))
    ((line-starts-with "\\<then\\>")
@@ -393,19 +406,12 @@ be indented."
       (current-column)))
    ((previous-line-starts-with "\\<else\\>")
     (+ (previous-line-indentation) xquery-mode-indent-width))
-   ((or (previous-line-starts-with "\\<then\\>")
-        (previous-line-ends-with "\\<then\\>"))
+   ((previous-line-ends-with "\\<then\\>")
     (save-excursion
       (re-search-backward "\\<if\\>")
       (+ (current-column) xquery-mode-indent-width)))
    ((previous-line-starts-with "\\<if\\>")
     (previous-line-indentation))
-   ((line-starts-with "\\<return\\>")
-    (save-excursion
-      (re-search-backward "\\<for\\>\\|\\<let\\>\\|\\<where\\>\\|\\<order\\>\\s-+\\<by\\>")
-      (current-column)))
-   ((previous-line-starts-with "\\<return\\>\\s-*$")
-    (+ (previous-line-indentation) xquery-mode-indent-width))
    ;; TODO: any logical operator
    ;; TODO: previous line ends with logical operator
    ((and (line-starts-with "\\<or\\>")
@@ -419,10 +425,16 @@ be indented."
     (save-excursion
       (re-search-backward "\\<where\\>")
       (current-column)))
+   ((previous-line-ends-with ":=")
+    (+ (previous-line-indentation) xquery-mode-indent-width))
    ((search-backward-first-unclosed)
     (save-excursion
       (goto-char (search-backward-first-unclosed))
       (cond
+       ((and (looking-at-p "(")
+             (looking-back "\\(\\<define\\>\\|\\<declare\\>\\)\\s-+\\<function\\>\\s-+.*"
+                           (line-beginning-position)))
+        (+ (current-indentation) xquery-mode-indent-width))
        ((looking-at-p "(")
         (1+ (current-column)))
        ((looking-at-p "<")
@@ -431,6 +443,10 @@ be indented."
         (+ (current-indentation) xquery-mode-indent-width))
        ((looking-at-p "{")
         (1+ (current-column))))))
+   ((previous-line-ends-with ":)")
+    (save-excursion
+      (re-search-backward ":)")
+      (search-backward-unclosed "(:" ":)" :func #'current-indentation)))
    (t (previous-line-indentation))))
 
 (defun line-starts-with (re)
