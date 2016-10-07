@@ -350,7 +350,10 @@ otherwise."
         (indent (or (xquery-calculate-indentation) 0)))
     (save-excursion
       (back-to-indentation)
-      (when (looking-back "^\t+" (line-beginning-position))
+      (when (string-match-p
+             "\t" (buffer-substring-no-properties
+                   (line-beginning-position)
+                   (point)))
         (delete-region (line-beginning-position) (point)))
       (indent-line-to indent))
     (when (not savept)
@@ -362,7 +365,8 @@ This function returns the column to which the current line should
 be indented."
   (cond
    ((or (looking-back "\\`\\(\\s-*\\|\n*\\)*" nil)
-        (line-starts-with "\\'"))
+        (line-starts-with "\\'")
+        (looking-at-p "^[[:space:]]*$"))
     0)
    ((and (line-starts-with "\\<at\\>\\s-+")
          (or (previous-line-starts-with"\\<import\\>\\s-+\\<module\\>\\s-+")
