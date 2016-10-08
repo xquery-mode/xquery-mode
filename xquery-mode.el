@@ -372,7 +372,11 @@ be indented."
          (or (previous-line-starts-with"\\<import\\>\\s-+\\<module\\>\\s-+")
              (previous-line-starts-with "\\(\\<define\\>\\|\\<declare\\>\\)\\s-+\\<function\\>\\s-+")))
     (+ (previous-line-indentation) xquery-mode-indent-width))
-   ((and (previous-line-starts-with "\\<at\\>\\s-+")
+   ((and (line-starts-with "=")
+         (previous-line-starts-with "\\<module\\>\\s-+\\<namespace\\>\\s-+"))
+    (+ (previous-line-indentation) xquery-mode-indent-width))
+   ((and (or (previous-line-starts-with "\\<at\\>\\s-+")
+             (previous-line-starts-with "="))
          (previous-line-ends-with ";"))
     (- (previous-line-indentation) xquery-mode-indent-width))
    ((and (previous-line-starts-with "\\(\\<define\\>\\|\\<declare\\>\\)\\s-+\\<function\\>\\s-+")
@@ -393,12 +397,30 @@ be indented."
       (search-backward-unclosed (format "<%s\\>[^>]*>" tag) (format "</%s>" tag))))
    ;; TODO: open xml comment
    ;; TODO: close xml comment
-   ;; TODO: xquery comments indent
-   ((previous-line-starts-with "\\<for\\>")
-    (previous-line-indentation))
-   ((line-starts-with "\\<return\\>")
+   ((line-starts-with "\\(\\<default\\|\\<case\\>\\)")
     (save-excursion
-      (re-search-backward "\\<for\\>\\|\\<let\\>\\|\\<where\\>\\|\\<order\\>\\s-+\\<by\\>")
+      (re-search-backward "\\<typeswitch\\>")
+      (current-column)))
+   ((previous-line-starts-with "\\<case\\>")
+    (+ (previous-line-indentation) xquery-mode-indent-width))
+   ((and (line-starts-with "\\(\\<return\\>\\|\\<let\\>\\|\\<where\\>\\|\\<order\\>\\s-+\\<by\\>\\)")
+         (save-excursion
+           (let (exit result)
+             (while (not exit)
+               (if (re-search-backward "\\<for\\>\\|\\<let\\>\\|\\<where\\>\\|\\<order\\>\\s-+\\<by\\>" nil t)
+                   (when (not (nth 8 (syntax-ppss)))
+                     (setq exit t result t))
+                 (setq exit t)))
+             result)))
+    (save-excursion
+      ;; TODO: remove this duplication
+      (let (exit result)
+        (while (not exit)
+          (if (re-search-backward "\\<for\\>\\|\\<let\\>\\|\\<where\\>\\|\\<order\\>\\s-+\\<by\\>" nil t)
+              (when (not (nth 8 (syntax-ppss)))
+                (setq exit t result t))
+            (setq exit t)))
+        result)
       (current-column)))
    ((previous-line-starts-with "\\<return\\>\\s-*$")
     (+ (previous-line-indentation) xquery-mode-indent-width))
@@ -408,7 +430,7 @@ be indented."
     (save-excursion
       (re-search-backward "\\<if\\>")
       (current-column)))
-   ((previous-line-starts-with "\\<else\\>")
+   ((previous-line-ends-with "\\<else\\>")
     (+ (previous-line-indentation) xquery-mode-indent-width))
    ((previous-line-ends-with "\\<then\\>")
     (save-excursion
@@ -429,8 +451,39 @@ be indented."
     (save-excursion
       (re-search-backward "\\<where\\>")
       (current-column)))
+   ((and (line-starts-with "=>")
+         (not (previous-line-starts-with "=>")))
+    (save-excursion
+      (forward-line -1)
+      (end-of-line)
+      (let ((tokens (reverse (split-string (thing-at-point 'line))))
+            tokens-to-skip)
+        (push (pop tokens) tokens-to-skip)
+        ;; TODO: skip expressions here
+        (re-search-backward (apply #'concat tokens-to-skip)
+                            (line-beginning-position))
+        (current-column))))
+   ((and (line-starts-with "=>")
+         (previous-line-starts-with "=>"))
+    (previous-line-indentation))
    ((previous-line-ends-with ":=")
     (+ (previous-line-indentation) xquery-mode-indent-width))
+   ((search-backward-unclosed "(:" ":)")
+    (if (line-starts-with ":")
+        (1+ (search-backward-unclosed "(:" ":)"))
+      (+ 3 (search-backward-unclosed "(:" ":)"))))
+   ((previous-line-ends-with ":)")
+    (save-excursion
+      (re-search-backward ":)")
+      (search-backward-unclosed "(:" ":)" :func #'current-indentation)))
+   ;; ((and (line-starts-with "(:")
+   ;;       (save-excursion
+   ;;         (re-search-forward ":)" nil t)))
+   ;;  (save-excursion
+   ;;    (re-search-forward ":)")
+   ;;    (forward-line)
+   ;;    (beginning-of-line)
+   ;;    (xquery-calculate-indentation)))
    ((search-backward-first-unclosed)
     (save-excursion
       (goto-char (search-backward-first-unclosed))
@@ -447,10 +500,6 @@ be indented."
         (+ (current-indentation) xquery-mode-indent-width))
        ((looking-at-p "{")
         (1+ (current-column))))))
-   ((previous-line-ends-with ":)")
-    (save-excursion
-      (re-search-backward ":)")
-      (search-backward-unclosed "(:" ":)" :func #'current-indentation)))
    (t (previous-line-indentation))))
 
 (defun line-starts-with (re)
