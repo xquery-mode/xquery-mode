@@ -213,8 +213,6 @@
    "?\\)")
   "QName regex, in 3 groups.")
 
-;; highlighting
-;; these are "matcher . highlighter" forms
 (font-lock-add-keywords
  'xquery-mode
  `(
@@ -273,7 +271,7 @@
       "(?\\s-*\\(" xquery-mode-qname "\\)?\\s-*)?")
     (1 font-lock-keyword-face)
     (2 font-lock-type-face)
-    ;; TODO the second qname never matches
+    ;; TODO: the second qname never matches
     (3 font-lock-type-face))
    ;; function call
    (,(concat "\\(" xquery-mode-qname "\\)(")
@@ -289,41 +287,42 @@
    ("\\(default\\s-+return\\)\\s-+"
     (1 font-lock-keyword-face)
     (2 font-lock-keyword-face))
-   ;;
-   ;; highlighting - use nxml config to font-lock directly-constructed XML
-   ;;
    ;; xml start element start
    (,(concat "<" xquery-mode-qname)
-    (1 'nxml-element-prefix-face)
-    (2 'nxml-element-colon-face)
-    (3 'nxml-element-prefix-face))
+    (1 'nxml-element-prefix)
+    (2 'nxml-element-colon)
+    (3 'nxml-element-prefix))
    ;; xml start element end
    ("\\(/?\\)>"
-    (1 'nxml-tag-slash-face))
+    (1 'nxml-tag-slash))
    ;; xml end element
    (,(concat "<\\(/\\)" xquery-mode-qname ">")
-    (1 'nxml-tag-slash-face)
-    (2 'nxml-element-prefix-face)
-    (3 'nxml-element-colon-face)
-    (4 'nxml-element-local-name-face))
-   ;; TODO xml attribute or xmlns decl
+    (1 'nxml-tag-slash)
+    (2 'nxml-element-prefix)
+    (3 'nxml-element-colon)
+    (4 'nxml-element-local-name))
+   ;; TODO: xml attribute or xmlns decl
    ;; xml comments
    ("\\(<!--\\)\\([^-]*\\)\\(-->\\)"
-    (1 'nxml-comment-delimiter-face)
-    (2 'nxml-comment-content-face)
-    (3 'nxml-comment-delimiter-face))
+    (1 'nxml-comment-delimiter)
+    (2 'nxml-comment-content)
+    (3 'nxml-comment-delimiter))
    ;; highlighting XPath expressions, including *:foo
-   ;; TODO this doesn't match expressions unless they start with slash
-   ;; TODO but matching without a leading slash overrides all the keywords
+   ;;
+   ;; TODO: this doesn't match expressions unless they start with
+   ;; slash
+   ;;
+   ;; TODO: but matching without a leading slash overrides all the
+   ;; keywords
    (,(concat "\\(//?\\)\\(*\\|\\sw*\\)\\(:?\\)" xquery-mode-ncname)
     (1 font-lock-constant-face)
     (2 font-lock-constant-face)
     (3 font-lock-constant-face)
     (4 font-lock-constant-face))
-   ;;
-   ;; highlighting pseudo-keywords - must be late, for problems like 'if ()'
-   ;;
-   (,xquery-mode-keywords-regex (1 font-lock-keyword-face))))
+   ;; highlighting pseudo-keywords - must be late, for problems like
+   ;; 'if ()'
+   (,xquery-mode-keywords-regex
+    (1 font-lock-keyword-face))))
 
 ;;;###autoload
 (add-to-list 'auto-mode-alist '(".xq[erxy]\\'" . xquery-mode))
