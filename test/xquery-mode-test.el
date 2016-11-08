@@ -28,7 +28,7 @@
                                  (cl-loop for i to (random 20)
                                           collect (if (zerop (random 2)) ? ?\t)))))))
           (xquery-mode)
-          (indent-region (point-min) (point-max))
+          (xquery-mode-indent-region (point-min) (point-max))
           (should (string= (buffer-substring-no-properties (point-min) (point-max))
                            ,fixture)))))))
 
