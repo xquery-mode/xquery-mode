@@ -596,23 +596,56 @@ START and END are region boundaries."
            (re (mapconcat (lambda (x) (concat "\\(" (car x) "\\)"))
                           literals
                           "\\|"))
+           (current-indent 0)
            stream exit)
       (goto-char (point-min))
       (while (not exit)
         (if (not (re-search-forward re (line-end-position) t))
             (progn
+              (setq current-indent (calculate-xquery-indent-diff stream))
+              (indent-line-to current-indent)
               (if (eq (line-end-position) (point-max))
                   (setq exit t)
                 (forward-line)
                 (beginning-of-line)
-                (push '(newline) stream)))
+                (push (cons 'newline current-indent) stream)))
           (let* ((matched-group (cl-find-if #'match-string-no-properties groups))
-                 (found-literal (cdr (assoc matched-group group-lookup))))
-            (push (cons found-literal (- (current-column)
-                                         (current-indentation)
-                                         (length (match-string-no-properties 0))))
-                  stream))))
-      (print stream))))
+                 (found-literal (cdr (assoc matched-group group-lookup)))
+                 (offset (- (current-column)
+                            (current-indentation)
+                            (length (match-string-no-properties 0)))))
+            (push (cons found-literal offset) stream)))))))
+
+(defun calculate-xquery-indent-diff (stream)
+  (let* ((tokens (cl-loop for token in stream
+                               until (eq (car token) 'newline)
+                               collect token))
+         (line (reverse tokens))
+         (line-length (length line))
+         (rest (cl-loop for token in stream
+                        for index from 0
+                        when (> index line-length)
+                        collect token))
+         (first-token (car line)))
+    (cond
+     ((equal first-token '(close-xml-tag . 0))
+      (find-matching-xml-tag-indent rest))
+     (t 0))))
+
+(defun find-matching-xml-tag-indent (stream)
+  (let* ((closing-counter 0)
+         (line-start 0)
+         (matched (cl-loop for token in stream
+                           when (and (eq (car token) 'open-xml-tag)
+                                     (eq closing-counter 0))
+                           return token
+                           when (eq (car token) 'close-xml-tag)
+                           do (cl-incf closing-counter)
+                           when (eq (car token) 'open-xml-tag)
+                           do (cl-decf closing-counter)
+                           when (eq (car token) 'newline)
+                           do (setq line-start (cdr token)))))
+    (+ (cdr matched) closing-counter)))
 
 (provide 'xquery-mode)
 
