@@ -583,12 +583,15 @@ START and END are region boundaries."
                        ("(" . open-round-bracket)
                        (")" . close-round-bracket)
                        ("<[^>/ ]+?\\>[^>]*>" . open-xml-tag)
-                       ("</[^>]+>" . close-xml-tag)))
-           (opening '(open-curly-bracket open-round-bracket open-xml-tag))
-           (closing '(close-curly-bracket close-round-bracket close-xml-tag))
+                       ("</[^>]+>" . close-xml-tag)
+                       ("\\<return\\>" . return-stmt)
+                       ("\\<[^[:space:]]+?\\>" . word-stmt)))
+           (opening '(open-curly-bracket open-round-bracket open-xml-tag return-stmt))
+           (closing '(close-curly-bracket close-round-bracket close-xml-tag word-stmt))
            (opposite '((close-curly-bracket . open-curly-bracket)
                        (close-round-bracket . open-round-bracket)
-                       (close-xml-tag . open-xml-tag)))
+                       (close-xml-tag . open-xml-tag)
+                       (word-stmt . return-stmt)))
            (group-lookup (cl-loop for x in literals
                                   for y from 1
                                   collect (cons y (cdr x))))
@@ -602,7 +605,7 @@ START and END are region boundaries."
       (while (not exit)
         (if (not (re-search-forward re (line-end-position) t))
             (progn
-              (and stream
+              (and stream line-stream
                    (cl-destructuring-bind (previous-token previous-indent previous-offset)
                        (car stream)
                      (cl-destructuring-bind (first-token first-indent first-offset)
@@ -614,7 +617,7 @@ START and END are region boundaries."
                          (setq current-indent (+ previous-indent previous-offset)))
                         ((eq previous-token 'open-round-bracket)
                          (setq current-indent (+ previous-indent previous-offset 1)))
-                        ((eq previous-token 'open-curly-bracket)
+                        ((memq previous-token '(open-curly-bracket return-stmt))
                          (setq current-indent (+ previous-indent xquery-mode-indent-width)))
                         ((eq previous-token 'open-xml-tag)
                          (setq current-indent (+ previous-indent previous-offset xquery-mode-indent-width)))))))
@@ -631,9 +634,7 @@ START and END are region boundaries."
                       (setq stream (cl-remove (cdr (assoc current-token opposite)) stream :count 1 :key #'car))))))
                 (setq line-stream nil)
                 (forward-line)
-                (back-to-indentation)
-                (when (not (looking-at-p re))
-                  (push '(line-start nil nil) line-stream))))
+                (beginning-of-line)))
           (let* ((matched-group (cl-find-if #'match-string-no-properties groups))
                  (found-literal (cdr (assoc matched-group group-lookup)))
                  (offset (- (current-column)
