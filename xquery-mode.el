@@ -608,11 +608,12 @@ START and END are region boundaries."
                      (cl-destructuring-bind (first-token first-indent first-offset)
                          (car (last line-stream))
                        (cond
+                        ((cl-loop for (close . open) in opposite
+                                  thereis (and (eq open previous-token)
+                                               (eq close first-token)))
+                         (setq current-indent (+ previous-indent previous-offset)))
                         ((eq previous-token 'open-round-bracket)
-                         (setq current-indent (+ previous-indent previous-offset 1)))
-                        ((and (eq previous-token 'open-xml-tag)
-                              (eq first-token 'close-xml-tag))
-                         (setq current-indent (+ previous-indent previous-offset)))))))
+                         (setq current-indent (+ previous-indent previous-offset 1)))))))
               (indent-line-to current-indent)
               (if (eq (line-end-position) (point-max))
                   (setq exit t)
