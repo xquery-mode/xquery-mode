@@ -622,11 +622,11 @@ START and END are region boundaries."
               (if (eq (line-end-position) (point-max))
                   (setq exit t)
                 (dolist (token (reverse line-stream))
-                  (cl-destructuring-bind (current-token current-indent current-offset)
+                  (cl-destructuring-bind (current-token _ current-offset)
                       token
                     (cond
                      ((memq current-token opening)
-                      (push token stream))
+                      (push (list current-token current-indent current-offset) stream))
                      ((memq current-token closing)
                       (setq stream (cl-remove (cdr (assoc current-token opposite)) stream :count 1 :key #'car))))))
                 (setq line-stream nil)
@@ -639,7 +639,7 @@ START and END are region boundaries."
                  (offset (- (current-column)
                             (current-indentation)
                             (length (match-string-no-properties 0)))))
-            (push (list found-literal current-indent offset) line-stream)))))))
+            (push (list found-literal nil offset) line-stream)))))))
 
 (provide 'xquery-mode)
 
