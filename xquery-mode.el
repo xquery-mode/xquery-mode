@@ -605,9 +605,14 @@ START and END are region boundaries."
               (and stream
                    (cl-destructuring-bind (previous-token previous-indent previous-offset)
                        (car stream)
-                     (cond
-                      ((eq previous-token 'open-round-bracket)
-                       (setq current-indent (+ previous-indent previous-offset 1))))))
+                     (cl-destructuring-bind (first-token first-indent first-offset)
+                         (car (last line-stream))
+                       (cond
+                        ((eq previous-token 'open-round-bracket)
+                         (setq current-indent (+ previous-indent previous-offset 1)))
+                        ((and (eq previous-token 'open-xml-tag)
+                              (eq first-token 'close-xml-tag))
+                         (setq current-indent (+ previous-indent previous-offset)))))))
               (indent-line-to current-indent)
               (if (eq (line-end-position) (point-max))
                   (setq exit t)
@@ -621,7 +626,9 @@ START and END are region boundaries."
                       (setq stream (cl-remove (cdr (assoc current-token opposite)) stream :count 1 :key #'car))))))
                 (setq line-stream nil)
                 (forward-line)
-                (beginning-of-line)))
+                (back-to-indentation)
+                (when (not (looking-at-p re))
+                  (push '(line-start nil nil) line-stream))))
           (let* ((matched-group (cl-find-if #'match-string-no-properties groups))
                  (found-literal (cdr (assoc matched-group group-lookup)))
                  (offset (- (current-column)
