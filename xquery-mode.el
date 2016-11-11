@@ -587,11 +587,11 @@ START and END are region boundaries."
                        ("\\<return\\>" . return-stmt)
                        ("\\<[^[:space:]]+?\\>" . word-stmt)))
            (opening '(open-curly-bracket open-round-bracket open-xml-tag return-stmt))
-           (closing '(close-curly-bracket close-round-bracket close-xml-tag word-stmt))
+           (closing '(close-curly-bracket close-round-bracket close-xml-tag terminator-stmt))
            (opposite '((close-curly-bracket . open-curly-bracket)
                        (close-round-bracket . open-round-bracket)
                        (close-xml-tag . open-xml-tag)
-                       (word-stmt . return-stmt)))
+                       (terminator-stmt . return-stmt)))
            (group-lookup (cl-loop for x in literals
                                   for y from 1
                                   collect (cons y (cdr x))))
@@ -637,10 +637,11 @@ START and END are region boundaries."
                 (beginning-of-line)))
           (let* ((matched-group (cl-find-if #'match-string-no-properties groups))
                  (found-literal (cdr (assoc matched-group group-lookup)))
-                 (offset (- (current-column)
-                            (current-indentation)
-                            (length (match-string-no-properties 0)))))
-            (push (list found-literal nil offset) line-stream)))))))
+                 (terminator-offset (- (current-column) (current-indentation)))
+                 (offset (- terminator-offset (length (match-string-no-properties 0)))))
+            (push (list found-literal nil offset) line-stream)
+            (when (memq found-literal closing)
+              (push (list 'terminator-stmt nil terminator-offset) line-stream))))))))
 
 (provide 'xquery-mode)
 
