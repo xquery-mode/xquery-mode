@@ -586,9 +586,9 @@ START and END are region boundaries."
                        ("</[^>]+>" . close-xml-tag)))
            (opening '(open-curly-bracket open-round-bracket open-xml-tag))
            (closing '(close-curly-bracket close-round-bracket close-xml-tag))
-           (opposite '((open-curly-bracket . close-curly-bracket)
-                       (open-round-bracket . close-round-bracket)
-                       (open-xml-tag . close-xml-tag)))
+           (opposite '((close-curly-bracket . open-curly-bracket)
+                       (close-round-bracket . open-round-bracket)
+                       (close-xml-tag . open-xml-tag)))
            (group-lookup (cl-loop for x in literals
                                   for y from 1
                                   collect (cons y (cdr x))))
@@ -597,55 +597,37 @@ START and END are region boundaries."
                           literals
                           "\\|"))
            (current-indent 0)
-           stream exit)
+           stream line-stream exit)
       (goto-char (point-min))
       (while (not exit)
         (if (not (re-search-forward re (line-end-position) t))
             (progn
-              (setq current-indent (calculate-xquery-indent-diff stream))
+              (and stream
+                   (cl-destructuring-bind (previous-token previous-indent previous-offset)
+                       (car stream)
+                     (cond
+                      ((eq previous-token 'open-round-bracket)
+                       (setq current-indent (+ previous-indent previous-offset 1))))))
               (indent-line-to current-indent)
               (if (eq (line-end-position) (point-max))
                   (setq exit t)
+                (dolist (token (reverse line-stream))
+                  (cl-destructuring-bind (current-token current-indent current-offset)
+                      token
+                    (cond
+                     ((memq current-token opening)
+                      (push token stream))
+                     ((memq current-token closing)
+                      (setq stream (cl-remove (cdr (assoc current-token opposite)) stream :count 1 :key #'car))))))
+                (setq line-stream nil)
                 (forward-line)
-                (beginning-of-line)
-                (push (cons 'newline current-indent) stream)))
+                (beginning-of-line)))
           (let* ((matched-group (cl-find-if #'match-string-no-properties groups))
                  (found-literal (cdr (assoc matched-group group-lookup)))
                  (offset (- (current-column)
                             (current-indentation)
                             (length (match-string-no-properties 0)))))
-            (push (cons found-literal offset) stream)))))))
-
-(defun calculate-xquery-indent-diff (stream)
-  (let* ((tokens (cl-loop for token in stream
-                               until (eq (car token) 'newline)
-                               collect token))
-         (line (reverse tokens))
-         (line-length (length line))
-         (rest (cl-loop for token in stream
-                        for index from 0
-                        when (> index line-length)
-                        collect token))
-         (first-token (car line)))
-    (cond
-     ((equal first-token '(close-xml-tag . 0))
-      (find-matching-xml-tag-indent rest))
-     (t 0))))
-
-(defun find-matching-xml-tag-indent (stream)
-  (let* ((closing-counter 0)
-         (line-start 0)
-         (matched (cl-loop for token in stream
-                           when (and (eq (car token) 'open-xml-tag)
-                                     (eq closing-counter 0))
-                           return token
-                           when (eq (car token) 'close-xml-tag)
-                           do (cl-incf closing-counter)
-                           when (eq (car token) 'open-xml-tag)
-                           do (cl-decf closing-counter)
-                           when (eq (car token) 'newline)
-                           do (setq line-start (cdr token)))))
-    (+ (cdr matched) closing-counter)))
+            (push (list found-literal current-indent offset) line-stream)))))))
 
 (provide 'xquery-mode)
 
