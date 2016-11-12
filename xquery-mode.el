@@ -661,7 +661,7 @@ START and END are region boundaries."
                                  (memq (caar stream)
                                        (cdr (assoc current-token opposite))))
                         (when (memq (car (pop stream)) expression-marks)
-                          (push '(expression-stmt nil) line-stream)))
+                          (push '(expression-stmt current-offset) line-stream)))
                       (when (memq current-token opening)
                         (push (list current-token current-indent current-offset) stream)))))
                 (setq line-stream nil)
