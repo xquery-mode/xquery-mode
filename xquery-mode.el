@@ -578,7 +578,8 @@ be indented."
 START and END are region boundaries."
   (interactive "r")
   (save-excursion
-    (let* ((literals '(("{" . open-curly-bracket)
+    (let* ((literals '(("{$" . open-curly-bracket-at-the-end)
+                       ("{" . open-curly-bracket)
                        ("}" . close-curly-bracket)
                        ("(" . open-round-bracket)
                        (")" . close-round-bracket)
@@ -586,12 +587,19 @@ START and END are region boundaries."
                        ("</[^>]+>" . close-xml-tag)
                        ("\\<return\\>" . return-stmt)
                        ("\\<[^[:space:]]+?\\>" . word-stmt)))
-           (opening '(open-curly-bracket open-round-bracket open-xml-tag return-stmt))
-           (closing '(close-curly-bracket close-round-bracket close-xml-tag terminator-stmt))
-           (opposite '((close-curly-bracket . open-curly-bracket)
-                       (close-round-bracket . open-round-bracket)
-                       (close-xml-tag . open-xml-tag)
-                       (terminator-stmt . return-stmt)))
+           (opening '(open-curly-bracket-at-the-end
+                      open-curly-bracket
+                      open-round-bracket
+                      open-xml-tag
+                      return-stmt))
+           (closing '(close-curly-bracket
+                      close-round-bracket
+                      close-xml-tag
+                      terminator-stmt))
+           (opposite '((close-curly-bracket open-curly-bracket-at-the-end open-curly-bracket)
+                       (close-round-bracket open-round-bracket)
+                       (close-xml-tag open-xml-tag)
+                       (terminator-stmt return-stmt)))
            (group-lookup (cl-loop for x in literals
                                   for y from 1
                                   collect (cons y (cdr x))))
@@ -611,13 +619,13 @@ START and END are region boundaries."
                      (cl-destructuring-bind (first-token first-indent first-offset)
                          (car (last line-stream))
                        (cond
-                        ((cl-loop for (close . open) in opposite
-                                  thereis (and (eq open previous-token)
-                                               (eq close first-token)))
+                        ((cl-loop for op in opposite
+                                  thereis (and (eq first-token (car op))
+                                               (memq previous-token (cdr op))))
                          (setq current-indent (+ previous-indent previous-offset)))
-                        ((eq previous-token 'open-round-bracket)
+                        ((memq previous-token '(open-curly-bracket open-round-bracket))
                          (setq current-indent (+ previous-indent previous-offset 1)))
-                        ((memq previous-token '(open-curly-bracket return-stmt))
+                        ((memq previous-token '(open-curly-bracket-at-the-end return-stmt))
                          (setq current-indent (+ previous-indent xquery-mode-indent-width)))
                         ((eq previous-token 'open-xml-tag)
                          (setq current-indent (+ previous-indent previous-offset xquery-mode-indent-width)))))))
@@ -631,7 +639,12 @@ START and END are region boundaries."
                      ((memq current-token opening)
                       (push (list current-token current-indent current-offset) stream))
                      ((memq current-token closing)
-                      (setq stream (cl-remove (cdr (assoc current-token opposite)) stream :count 1 :key #'car))))))
+                      (setq stream (cl-remove (cdr (assoc current-token opposite))
+                                              stream
+                                              :count 1
+                                              :key #'car
+                                              :test (lambda (opposite-tokens stream-item)
+                                                      (memq stream-item opposite-tokens))))))))
                 (setq line-stream nil)
                 (forward-line)
                 (beginning-of-line)))
