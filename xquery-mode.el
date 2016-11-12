@@ -618,7 +618,7 @@ START and END are region boundaries."
               (and stream line-stream
                    (cl-destructuring-bind (previous-token previous-indent previous-offset)
                        (car stream)
-                     (cl-destructuring-bind (first-token first-indent first-offset)
+                     (cl-destructuring-bind (first-token first-offset)
                          (car (last line-stream))
                        (cond
                         ((cl-loop for pair in pairs
@@ -635,7 +635,7 @@ START and END are region boundaries."
               (if (eq (line-end-position) (point-max))
                   (setq exit t)
                 (dolist (token (reverse line-stream))
-                  (cl-destructuring-bind (current-token nil current-offset)
+                  (cl-destructuring-bind (current-token current-offset)
                       token
                     (when (and (memq current-token closing)
                                (memq (caar stream)
@@ -650,9 +650,9 @@ START and END are region boundaries."
                  (found-literal (cdr (assoc matched-group group-lookup)))
                  (terminator-offset (- (current-column) (current-indentation)))
                  (offset (- terminator-offset (length (match-string-no-properties 0)))))
-            (push (list found-literal nil offset) line-stream)
+            (push (list found-literal offset) line-stream)
             (when (memq found-literal terminators)
-              (push (list 'terminator-stmt nil terminator-offset) line-stream))))))))
+              (push (list 'terminator-stmt terminator-offset) line-stream))))))))
 
 (provide 'xquery-mode)
 
