@@ -610,27 +610,30 @@ START and END are region boundaries."
                           literals
                           "\\|"))
            (current-indent 0)
-           stream line-stream exit)
+           (stream '((buffer-beginning 0 0)))
+           line-stream exit)
       (goto-char (point-min))
       (while (not exit)
         (if (not (re-search-forward re (line-end-position) t))
             (progn
-              (and stream line-stream
-                   (cl-destructuring-bind (previous-token previous-indent previous-offset)
-                       (car stream)
-                     (cl-destructuring-bind (first-token first-offset)
-                         (car (last line-stream))
-                       (cond
-                        ((cl-loop for pair in pairs
+              (cl-destructuring-bind (previous-token previous-indent previous-offset)
+                  (car stream)
+                (cond
+                 ((and line-stream
+                       (cl-destructuring-bind (first-token first-offset)
+                           (car (last line-stream))
+                         (cl-loop for pair in pairs
                                   thereis (and (eq first-token (car pair))
-                                               (memq previous-token (cdr pair))))
-                         (setq current-indent (+ previous-indent previous-offset)))
-                        ((memq previous-token '(open-curly-bracket open-round-bracket))
-                         (setq current-indent (+ previous-indent previous-offset 1)))
-                        ((eq previous-token 'open-curly-bracket-at-the-end)
-                         (setq current-indent (+ previous-indent xquery-mode-indent-width)))
-                        ((memq previous-token '(open-xml-tag return-stmt if-stmt else-stmt))
-                         (setq current-indent (+ previous-indent previous-offset xquery-mode-indent-width)))))))
+                                               (memq previous-token (cdr pair))))))
+                  (setq current-indent (+ previous-indent previous-offset)))
+                 ((memq previous-token '(open-curly-bracket open-round-bracket))
+                  (setq current-indent (+ previous-indent previous-offset 1)))
+                 ((eq previous-token 'open-curly-bracket-at-the-end)
+                  (setq current-indent (+ previous-indent xquery-mode-indent-width)))
+                 ((memq previous-token '(open-xml-tag return-stmt if-stmt else-stmt))
+                  (setq current-indent (+ previous-indent previous-offset xquery-mode-indent-width)))
+                 ((eq previous-token 'buffer-beginning)
+                  (setq current-indent 0))))
               (indent-line-to current-indent)
               (if (eq (line-end-position) (point-max))
                   (setq exit t)
