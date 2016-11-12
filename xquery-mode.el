@@ -633,18 +633,15 @@ START and END are region boundaries."
               (if (eq (line-end-position) (point-max))
                   (setq exit t)
                 (dolist (token (reverse line-stream))
-                  (cl-destructuring-bind (current-token _ current-offset)
+                  (cl-destructuring-bind (current-token nil current-offset)
                       token
                     (cond
                      ((memq current-token opening)
                       (push (list current-token current-indent current-offset) stream))
-                     ((memq current-token closing)
-                      (setq stream (cl-remove (cdr (assoc current-token opposite))
-                                              stream
-                                              :count 1
-                                              :key #'car
-                                              :test (lambda (opposite-tokens stream-item)
-                                                      (memq stream-item opposite-tokens))))))))
+                     ((and (memq current-token closing)
+                           (memq (caar stream)
+                                 (cdr (assoc current-token opposite))))
+                      (pop stream)))))
                 (setq line-stream nil)
                 (forward-line)
                 (beginning-of-line)))
