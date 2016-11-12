@@ -585,6 +585,10 @@ START and END are region boundaries."
                        (")" . close-round-bracket)
                        ("<[^>/ ]+?\\>[^>]*>" . open-xml-tag)
                        ("</[^>]+>" . close-xml-tag)
+                       ("\\\\\"" . escaped-quote-stmt)
+                       ("\\\\'" . escaped-quote-stmt)
+                       ("\"" . double-quote-stmt)
+                       ("'" . quote-stmt)
                        ("\\<let\\>" . let-stmt)
                        (":=" . assign-stmt)
                        ("\\<if\\>" . if-stmt)
@@ -595,9 +599,11 @@ START and END are region boundaries."
            (opposite '((close-curly-bracket open-curly-bracket-at-the-end open-curly-bracket)
                        (close-round-bracket open-round-bracket)
                        (close-xml-tag open-xml-tag)
+                       (double-quote-stmt double-quote-stmt)
+                       (quote-stmt quote-stmt)
                        (assign-stmt let-stmt)
                        (else-stmt if-stmt)
-                       (expression-stmt return-stmt else-stmt assign-stmt)
+                       (expression-stmt return-stmt else-stmt assign-stmt double-quote-stmt quote-stmt)
                        (newline-stmt assign-stmt)))
            (pairs (append opposite
                           '((then-stmt if-stmt))))
@@ -605,7 +611,9 @@ START and END are region boundaries."
                                open-curly-bracket
                                open-round-bracket
                                open-xml-tag
-                               else-stmt))
+                               else-stmt
+                               double-quote-stmt
+                               quote-stmt))
            (opening (apply #'append (mapcar #'cdr opposite)))
            (closing (mapcar #'car opposite))
            (group-lookup (cl-loop for x in literals
