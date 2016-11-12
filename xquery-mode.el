@@ -597,13 +597,15 @@ START and END are region boundaries."
                        (close-xml-tag open-xml-tag)
                        (assign-stmt let-stmt)
                        (else-stmt if-stmt)
-                       (terminator-stmt return-stmt else-stmt assign-stmt)
+                       (expression-stmt return-stmt else-stmt assign-stmt)
                        (newline-stmt assign-stmt)))
            (pairs (append opposite
                           '((then-stmt if-stmt))))
-           (terminators '(close-curly-bracket
-                          close-round-bracket
-                          close-xml-tag))
+           (expression-marks '(open-curly-bracket-at-the-end
+                               open-curly-bracket
+                               open-round-bracket
+                               open-xml-tag
+                               else-stmt))
            (opening (apply #'append (mapcar #'cdr opposite)))
            (closing (mapcar #'car opposite))
            (group-lookup (cl-loop for x in literals
@@ -642,25 +644,27 @@ START and END are region boundaries."
               (indent-line-to current-indent)
               (if (eq (line-end-position) (point-max))
                   (setq exit t)
-                (dolist (token (reverse line-stream))
-                  (cl-destructuring-bind (current-token current-offset)
-                      token
-                    (when (and (memq current-token closing)
-                               (memq (caar stream)
-                                     (cdr (assoc current-token opposite))))
-                      (pop stream))
-                    (when (memq current-token opening)
-                      (push (list current-token current-indent current-offset) stream))))
+                (setq line-stream (reverse line-stream))
+                (while line-stream
+                  (let ((token (pop line-stream)))
+                    (cl-destructuring-bind (current-token current-offset)
+                        token
+                      (when (and (memq current-token closing)
+                                 (memq (caar stream)
+                                       (cdr (assoc current-token opposite))))
+                        (when (memq (car (pop stream)) expression-marks)
+                          (push '(expression-stmt nil) line-stream)))
+                      (when (memq current-token opening)
+                        (push (list current-token current-indent current-offset) stream)))))
                 (setq line-stream nil)
                 (forward-line)
                 (beginning-of-line)))
           (let* ((matched-group (cl-find-if #'match-string-no-properties groups))
                  (found-literal (cdr (assoc matched-group group-lookup)))
-                 (terminator-offset (- (current-column) (current-indentation)))
-                 (offset (- terminator-offset (length (match-string-no-properties 0)))))
-            (push (list found-literal offset) line-stream)
-            (when (memq found-literal terminators)
-              (push (list 'terminator-stmt terminator-offset) line-stream))))))))
+                 (offset (- (current-column)
+                            (current-indentation)
+                            (length (match-string-no-properties 0)))))
+            (push (list found-literal offset) line-stream)))))))
 
 (provide 'xquery-mode)
 
