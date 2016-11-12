@@ -587,19 +587,15 @@ START and END are region boundaries."
                        ("</[^>]+>" . close-xml-tag)
                        ("\\<return\\>" . return-stmt)
                        ("\\<[^[:space:]]+?\\>" . word-stmt)))
-           (opening '(open-curly-bracket-at-the-end
-                      open-curly-bracket
-                      open-round-bracket
-                      open-xml-tag
-                      return-stmt))
-           (closing '(close-curly-bracket
-                      close-round-bracket
-                      close-xml-tag
-                      terminator-stmt))
            (opposite '((close-curly-bracket open-curly-bracket-at-the-end open-curly-bracket)
                        (close-round-bracket open-round-bracket)
                        (close-xml-tag open-xml-tag)
                        (terminator-stmt return-stmt)))
+           (terminators '(close-curly-bracket
+                          close-round-bracket
+                          close-xml-tag))
+           (opening (cl-mapcan #'cdr opposite))
+           (closing (mapcar #'car opposite))
            (group-lookup (cl-loop for x in literals
                                   for y from 1
                                   collect (cons y (cdr x))))
@@ -650,7 +646,7 @@ START and END are region boundaries."
                  (terminator-offset (- (current-column) (current-indentation)))
                  (offset (- terminator-offset (length (match-string-no-properties 0)))))
             (push (list found-literal nil offset) line-stream)
-            (when (memq found-literal closing)
+            (when (memq found-literal terminators)
               (push (list 'terminator-stmt nil terminator-offset) line-stream))))))))
 
 (provide 'xquery-mode)
