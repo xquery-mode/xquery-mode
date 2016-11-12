@@ -578,7 +578,9 @@ be indented."
 START and END are region boundaries."
   (interactive "r")
   (save-excursion
-    (let* ((literals '(("{$" . open-curly-bracket-at-the-end)
+    (let* ((literals '(("\\<define\\>\\s-+\\<function\\>.*{\\s-*$" . function-stmt)
+                       ("\\<declare\\>\\s-+\\<function\\>.*{\\s-*$" . function-stmt)
+                       ("{\\s-*$" . open-curly-bracket-at-the-end)
                        ("{" . open-curly-bracket)
                        ("}" . close-curly-bracket)
                        ("(" . open-round-bracket)
@@ -596,7 +598,7 @@ START and END are region boundaries."
                        ("\\<else\\>" . else-stmt)
                        ("\\<return\\>" . return-stmt)
                        ("\\<[^[:space:]]+?\\>" . word-stmt)))
-           (opposite '((close-curly-bracket open-curly-bracket-at-the-end open-curly-bracket)
+           (opposite '((close-curly-bracket open-curly-bracket-at-the-end open-curly-bracket function-stmt)
                        (close-round-bracket open-round-bracket)
                        (close-xml-tag open-xml-tag)
                        (double-quote-stmt double-quote-stmt)
@@ -643,7 +645,7 @@ START and END are region boundaries."
                   (setq current-indent (+ previous-indent previous-offset)))
                  ((memq previous-token '(open-curly-bracket open-round-bracket))
                   (setq current-indent (+ previous-indent previous-offset 1)))
-                 ((eq previous-token 'open-curly-bracket-at-the-end)
+                 ((memq previous-token '(open-curly-bracket-at-the-end function-stmt))
                   (setq current-indent (+ previous-indent xquery-mode-indent-width)))
                  ((memq previous-token '(open-xml-tag return-stmt if-stmt else-stmt))
                   (setq current-indent (+ previous-indent previous-offset xquery-mode-indent-width)))
