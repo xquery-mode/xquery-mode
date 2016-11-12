@@ -594,7 +594,7 @@ START and END are region boundaries."
            (terminators '(close-curly-bracket
                           close-round-bracket
                           close-xml-tag))
-           (opening (cl-mapcan #'cdr opposite))
+           (opening (apply #'append (mapcar #'cdr opposite)))
            (closing (mapcar #'car opposite))
            (group-lookup (cl-loop for x in literals
                                   for y from 1
