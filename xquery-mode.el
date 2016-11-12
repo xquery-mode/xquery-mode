@@ -585,6 +585,8 @@ START and END are region boundaries."
                        (")" . close-round-bracket)
                        ("<[^>/ ]+?\\>[^>]*>" . open-xml-tag)
                        ("</[^>]+>" . close-xml-tag)
+                       ("\\<let\\>" . let-stmt)
+                       (":=" . assign-stmt)
                        ("\\<if\\>" . if-stmt)
                        ("\\<then\\>" . then-stmt)
                        ("\\<else\\>" . else-stmt)
@@ -593,8 +595,10 @@ START and END are region boundaries."
            (opposite '((close-curly-bracket open-curly-bracket-at-the-end open-curly-bracket)
                        (close-round-bracket open-round-bracket)
                        (close-xml-tag open-xml-tag)
+                       (assign-stmt let-stmt)
                        (else-stmt if-stmt)
-                       (terminator-stmt return-stmt else-stmt)))
+                       (terminator-stmt return-stmt else-stmt assign-stmt)
+                       (newline-stmt assign-stmt)))
            (pairs (append opposite
                           '((then-stmt if-stmt))))
            (terminators '(close-curly-bracket
@@ -616,6 +620,7 @@ START and END are region boundaries."
       (while (not exit)
         (if (not (re-search-forward re (line-end-position) t))
             (progn
+              (push (list 'newline-stmt (line-end-position)) line-stream)
               (cl-destructuring-bind (previous-token previous-indent previous-offset)
                   (car stream)
                 (cond
