@@ -595,6 +595,8 @@ START and END are region boundaries."
                        (close-xml-tag open-xml-tag)
                        (else-stmt if-stmt)
                        (terminator-stmt return-stmt else-stmt)))
+           (pairs (append opposite
+                          '((then-stmt if-stmt))))
            (terminators '(close-curly-bracket
                           close-round-bracket
                           close-xml-tag))
@@ -619,9 +621,9 @@ START and END are region boundaries."
                      (cl-destructuring-bind (first-token first-indent first-offset)
                          (car (last line-stream))
                        (cond
-                        ((cl-loop for op in opposite
-                                  thereis (and (eq first-token (car op))
-                                               (memq previous-token (cdr op))))
+                        ((cl-loop for pair in pairs
+                                  thereis (and (eq first-token (car pair))
+                                               (memq previous-token (cdr pair))))
                          (setq current-indent (+ previous-indent previous-offset)))
                         ((memq previous-token '(open-curly-bracket open-round-bracket))
                          (setq current-indent (+ previous-indent previous-offset 1)))
