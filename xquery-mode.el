@@ -582,6 +582,8 @@ START and END are region boundaries."
                        ("\\<declare\\>\\s-+\\<function\\>.*{\\s-*$" . function-stmt)
                        ("\\<module\\>\\s-+\\<namespace\\>" . namespace-stmt)
                        ("\\<import\\>\\s-+\\<module\\>" . import-stmt)
+                       ("(:" . comment-start-stmt)
+                       (":)" . comment-end-stmt)
                        ("{\\s-*$" . open-curly-bracket-at-the-end)
                        ("{" . open-curly-bracket)
                        ("}" . close-curly-bracket)
@@ -612,9 +614,10 @@ START and END are region boundaries."
                        (return-stmt where-stmt)
                        (else-stmt if-stmt)
                        (semicolon-stmt namespace-stmt import-stmt)
+                       (comment-end-stmt comment-start-stmt)
                        (expression-stmt return-stmt else-stmt assign-stmt double-quote-stmt quote-stmt)
                        (newline-stmt assign-stmt)))
-           (pairs (append opposite
+           (pairs (append (cl-remove 'comment-end-stmt opposite :key #'car)
                           '((then-stmt if-stmt))))
            (expression-marks '(open-curly-bracket-at-the-end
                                open-curly-bracket
@@ -632,6 +635,11 @@ START and END are region boundaries."
            (re (mapconcat (lambda (x) (concat "\\(" (car x) "\\)"))
                           literals
                           "\\|"))
+           (next-re-table '((comment-start-stmt . comment-end-stmt)))
+           (re-table (list (list 'generic re groups group-lookup)
+                           ;; TODO: remove hardcoded values (calculate from literals).
+                           ;; TODO: skip inside strings too.
+                           '(comment-end-stmt "\\(:)\\)" (1) ((1 . comment-end-stmt)))))
            (current-indent 0)
            (stream '((buffer-beginning 0 0)))
            line-stream exit)
@@ -650,7 +658,7 @@ START and END are region boundaries."
                                   thereis (and (eq first-token (car pair))
                                                (memq previous-token (cdr pair))))))
                   (setq current-indent (+ previous-indent previous-offset)))
-                 ((memq previous-token '(open-curly-bracket open-round-bracket))
+                 ((memq previous-token '(open-curly-bracket open-round-bracket comment-start-stmt))
                   (setq current-indent (+ previous-indent previous-offset 1)))
                  ((memq previous-token '(open-curly-bracket-at-the-end function-stmt))
                   (setq current-indent (+ previous-indent xquery-mode-indent-width)))
@@ -682,8 +690,15 @@ START and END are region boundaries."
                  (found-literal (cdr (assoc matched-group group-lookup)))
                  (offset (- (current-column)
                             (current-indentation)
-                            (length (match-string-no-properties 0)))))
-            (push (list found-literal offset) line-stream)))))))
+                            (length (match-string-no-properties 0))))
+                 (next-re-key (or (cdr (assoc found-literal next-re-table)) 'generic))
+                 (next-re (cdr (assoc next-re-key re-table))))
+            (push (list found-literal offset) line-stream)
+            (cl-destructuring-bind (next-re-re next-re-groups next-re-lookups)
+                next-re
+              (setq re next-re-re
+                    groups next-re-groups
+                    group-lookup next-re-lookups))))))))
 
 (provide 'xquery-mode)
 
