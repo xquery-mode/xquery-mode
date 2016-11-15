@@ -618,6 +618,10 @@ START and END are region boundaries."
                        (comment-end-stmt comment-start-stmt)
                        (expression-stmt return-stmt else-stmt assign-stmt double-quote-stmt quote-stmt)
                        (newline-stmt assign-stmt)))
+           (next-re-table '((comment-start-stmt . inside-comment)
+                            (comment-end-stmt . generic)))
+           (grid (list (cons 'generic (mapcar #'cdr literals))
+                       '(inside-comment comment-end-stmt colon-stmt word-stmt)))
            (pairs (append (cl-remove 'comment-end-stmt opposite :key #'car)
                           '((then-stmt if-stmt))))
            (expression-marks '(open-curly-bracket-at-the-end-stmt
@@ -629,26 +633,27 @@ START and END are region boundaries."
                                quote-stmt))
            (opening (apply #'append (mapcar #'cdr opposite)))
            (closing (mapcar #'car opposite))
-           (group-lookup (cl-loop for x in literals
-                                  for y from 1
-                                  collect (cons y (cdr x))))
-           (groups (mapcar #'car group-lookup))
-           (re (mapconcat (lambda (x) (concat "\\(" (car x) "\\)"))
-                          literals
-                          "\\|"))
-           (next-re-table '((comment-start-stmt . comment-end-stmt)
-                            (comment-end-stmt . generic)))
-           (re-table (list (list 'generic re groups group-lookup)
-                           ;; TODO: remove hardcoded values (calculate from literals).
-                           ;; TODO: skip inside strings too.
-                           '(comment-end-stmt "\\(:)\\)\\|\\(:\\)\\|\\(\\(?:[[:alnum:]-_.:/]\\|\\[\\|\\]\\)+\\)"
-                                              (1 2 3)
-                                              ((1 . comment-end-stmt)
-                                               (2 . colon-stmt)
-                                               (3 . word-stmt)))))
+           (re-table (mapcar (lambda (g)
+                               (let* ((name (car g))
+                                      (grid-literals (cdr g))
+                                      (group-lookup (cl-loop for x in grid-literals
+                                                             for y from 1
+                                                             collect (cons y x)))
+                                      (groups (mapcar #'car group-lookup))
+                                      (re (mapconcat (lambda (x) (concat "\\(" (car x) "\\)"))
+                                                     (cl-remove-if-not
+                                                      (lambda (x) (memq (cdr x) grid-literals))
+                                                      literals)
+                                                     "\\|")))
+                                 (list name re groups group-lookup)))
+                             grid))  ;; TODO: skip inside strings too.
            (current-indent 0)
            (stream '((buffer-beginning 0 0)))
-           line-stream exit)
+           (re (cadr (assoc 'generic re-table)))
+           (groups (cl-caddr (assoc 'generic re-table)))
+           (group-lookup (cl-cadddr (assoc 'generic re-table)))
+           line-stream
+           exit)
       (goto-char (point-min))
       (while (not exit)
         (if (not (re-search-forward re (line-end-position) t))
