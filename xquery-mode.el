@@ -580,6 +580,8 @@ START and END are region boundaries."
   (save-excursion
     (let* ((literals '(("\\<define\\>\\s-+\\<function\\>.*{\\s-*$" . function-stmt)
                        ("\\<declare\\>\\s-+\\<function\\>.*{\\s-*$" . function-stmt)
+                       ("\\<module\\>\\s-+\\<namespace\\>" . namespace-stmt)
+                       ("\\<import\\>\\s-+\\<module\\>" . import-stmt)
                        ("{\\s-*$" . open-curly-bracket-at-the-end)
                        ("{" . open-curly-bracket)
                        ("}" . close-curly-bracket)
@@ -591,6 +593,7 @@ START and END are region boundaries."
                        ("\\\\'" . escaped-quote-stmt)
                        ("\"" . double-quote-stmt)
                        ("'" . quote-stmt)
+                       (";" . semicolon-stmt)
                        ("\\<let\\>" . let-stmt)
                        (":=" . assign-stmt)
                        ("\\<if\\>" . if-stmt)
@@ -608,6 +611,7 @@ START and END are region boundaries."
                        (assign-stmt let-stmt)
                        (return-stmt where-stmt)
                        (else-stmt if-stmt)
+                       (semicolon-stmt namespace-stmt import-stmt)
                        (expression-stmt return-stmt else-stmt assign-stmt double-quote-stmt quote-stmt)
                        (newline-stmt assign-stmt)))
            (pairs (append opposite
@@ -650,7 +654,7 @@ START and END are region boundaries."
                   (setq current-indent (+ previous-indent previous-offset 1)))
                  ((memq previous-token '(open-curly-bracket-at-the-end function-stmt))
                   (setq current-indent (+ previous-indent xquery-mode-indent-width)))
-                 ((memq previous-token '(open-xml-tag return-stmt if-stmt else-stmt))
+                 ((memq previous-token '(open-xml-tag return-stmt if-stmt else-stmt namespace-stmt import-stmt))
                   (setq current-indent (+ previous-indent previous-offset xquery-mode-indent-width)))
                  ((eq previous-token 'where-stmt)
                   (setq current-indent (+ previous-indent previous-offset 6)))
