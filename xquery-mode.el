@@ -595,9 +595,10 @@ START and END are region boundaries."
                        ("\\\\'" . escaped-quote-stmt)
                        ("\"" . double-quote-stmt)
                        ("'" . quote-stmt)
-                       (";" . semicolon-stmt)
                        ("\\<let\\>" . let-stmt)
                        (":=" . assign-stmt)
+                       (";" . semicolon-stmt)
+                       (":" . colon-stmt)
                        ("\\<if\\>" . if-stmt)
                        ("\\<then\\>" . then-stmt)
                        ("\\<else\\>" . else-stmt)
@@ -635,11 +636,16 @@ START and END are region boundaries."
            (re (mapconcat (lambda (x) (concat "\\(" (car x) "\\)"))
                           literals
                           "\\|"))
-           (next-re-table '((comment-start-stmt . comment-end-stmt)))
+           (next-re-table '((comment-start-stmt . comment-end-stmt)
+                            (comment-end-stmt . generic)))
            (re-table (list (list 'generic re groups group-lookup)
                            ;; TODO: remove hardcoded values (calculate from literals).
                            ;; TODO: skip inside strings too.
-                           '(comment-end-stmt "\\(:)\\)" (1) ((1 . comment-end-stmt)))))
+                           '(comment-end-stmt "\\(:)\\)\\|\\(:\\)\\|\\(\\(?:[[:alnum:]-_.:/]\\|\\[\\|\\]\\)+\\)"
+                                              (1 2 3)
+                                              ((1 . comment-end-stmt)
+                                               (2 . colon-stmt)
+                                               (3 . word-stmt)))))
            (current-indent 0)
            (stream '((buffer-beginning 0 0)))
            line-stream exit)
@@ -648,17 +654,20 @@ START and END are region boundaries."
         (if (not (re-search-forward re (line-end-position) t))
             (progn
               (push (list 'newline-stmt (line-end-position)) line-stream)
+              (setq line-stream (reverse line-stream))
               (cl-destructuring-bind (previous-token previous-indent previous-offset)
                   (car stream)
                 (cond
-                 ((and line-stream
-                       (cl-destructuring-bind (first-token first-offset)
-                           (car (last line-stream))
-                         (cl-loop for pair in pairs
-                                  thereis (and (eq first-token (car pair))
-                                               (memq previous-token (cdr pair))))))
+                 ((and (eq previous-token 'comment-start-stmt)
+                       (memq (caar line-stream) '(colon-stmt comment-end-stmt)))
+                  (setq current-indent (+ previous-indent previous-offset 1)))
+                 ((eq previous-token 'comment-start-stmt)
+                  (setq current-indent (+ previous-indent previous-offset 3)))
+                 ((cl-loop for pair in pairs
+                           thereis (and (eq (caar line-stream) (car pair))
+                                        (memq previous-token (cdr pair))))
                   (setq current-indent (+ previous-indent previous-offset)))
-                 ((memq previous-token '(open-curly-bracket open-round-bracket comment-start-stmt))
+                 ((memq previous-token '(open-curly-bracket open-round-bracket))
                   (setq current-indent (+ previous-indent previous-offset 1)))
                  ((memq previous-token '(open-curly-bracket-at-the-end function-stmt))
                   (setq current-indent (+ previous-indent xquery-mode-indent-width)))
@@ -671,7 +680,6 @@ START and END are region boundaries."
               (indent-line-to current-indent)
               (if (eq (line-end-position) (point-max))
                   (setq exit t)
-                (setq line-stream (reverse line-stream))
                 (while line-stream
                   (let ((token (pop line-stream)))
                     (cl-destructuring-bind (current-token current-offset)
@@ -690,15 +698,15 @@ START and END are region boundaries."
                  (found-literal (cdr (assoc matched-group group-lookup)))
                  (offset (- (current-column)
                             (current-indentation)
-                            (length (match-string-no-properties 0))))
-                 (next-re-key (or (cdr (assoc found-literal next-re-table)) 'generic))
-                 (next-re (cdr (assoc next-re-key re-table))))
+                            (length (match-string-no-properties 0)))))
             (push (list found-literal offset) line-stream)
-            (cl-destructuring-bind (next-re-re next-re-groups next-re-lookups)
-                next-re
-              (setq re next-re-re
-                    groups next-re-groups
-                    group-lookup next-re-lookups))))))))
+            (let ((next-re-key (cdr (assoc found-literal next-re-table))))
+              (when next-re-key
+                (cl-destructuring-bind (next-re-re next-re-groups next-re-lookups)
+                    (cdr (assoc next-re-key re-table))
+                  (setq re next-re-re
+                        groups next-re-groups
+                        group-lookup next-re-lookups))))))))))
 
 (provide 'xquery-mode)
 
