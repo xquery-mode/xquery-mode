@@ -584,13 +584,13 @@ START and END are region boundaries."
                        ("\\<import\\>\\s-+\\<module\\>" . import-stmt)
                        ("(:" . comment-start-stmt)
                        (":)" . comment-end-stmt)
-                       ("{\\s-*$" . open-curly-bracket-at-the-end)
-                       ("{" . open-curly-bracket)
-                       ("}" . close-curly-bracket)
-                       ("(" . open-round-bracket)
-                       (")" . close-round-bracket)
-                       ("<[^>/ ]+?\\>[^>]*>" . open-xml-tag)
-                       ("</[^>]+>" . close-xml-tag)
+                       ("{\\s-*$" . open-curly-bracket-at-the-end-stmt)
+                       ("{" . open-curly-bracket-stmt)
+                       ("}" . close-curly-bracket-stmt)
+                       ("(" . open-round-bracket-stmt)
+                       (")" . close-round-bracket-stmt)
+                       ("<[^>/ ]+?\\>[^>]*>" . open-xml-tag-stmt)
+                       ("</[^>]+>" . close-xml-tag-stmt)
                        ("\\\\\"" . escaped-quote-stmt)
                        ("\\\\'" . escaped-quote-stmt)
                        ("\"" . double-quote-stmt)
@@ -606,9 +606,9 @@ START and END are region boundaries."
                        ("\\<return\\>" . return-stmt)
                        ("\\$\\(?:[[:alnum:]-_.:/]\\|\\[\\|\\]\\)+" . var-stmt)
                        ("\\(?:[[:alnum:]-_.:/]\\|\\[\\|\\]\\)+" . word-stmt)))
-           (opposite '((close-curly-bracket open-curly-bracket-at-the-end open-curly-bracket function-stmt)
-                       (close-round-bracket open-round-bracket)
-                       (close-xml-tag open-xml-tag)
+           (opposite '((close-curly-bracket-stmt open-curly-bracket-at-the-end-stmt open-curly-bracket-stmt function-stmt)
+                       (close-round-bracket-stmt open-round-bracket-stmt)
+                       (close-xml-tag-stmt open-xml-tag-stmt)
                        (double-quote-stmt double-quote-stmt)
                        (quote-stmt quote-stmt)
                        (assign-stmt let-stmt)
@@ -620,10 +620,10 @@ START and END are region boundaries."
                        (newline-stmt assign-stmt)))
            (pairs (append (cl-remove 'comment-end-stmt opposite :key #'car)
                           '((then-stmt if-stmt))))
-           (expression-marks '(open-curly-bracket-at-the-end
-                               open-curly-bracket
-                               open-round-bracket
-                               open-xml-tag
+           (expression-marks '(open-curly-bracket-at-the-end-stmt
+                               open-curly-bracket-stmt
+                               open-round-bracket-stmt
+                               open-xml-tag-stmt
                                else-stmt
                                double-quote-stmt
                                quote-stmt))
@@ -667,11 +667,11 @@ START and END are region boundaries."
                            thereis (and (eq (caar line-stream) (car pair))
                                         (memq previous-token (cdr pair))))
                   (setq current-indent (+ previous-indent previous-offset)))
-                 ((memq previous-token '(open-curly-bracket open-round-bracket))
+                 ((memq previous-token '(open-curly-bracket-stmt open-round-bracket-stmt))
                   (setq current-indent (+ previous-indent previous-offset 1)))
-                 ((memq previous-token '(open-curly-bracket-at-the-end function-stmt))
+                 ((memq previous-token '(open-curly-bracket-at-the-end-stmt function-stmt))
                   (setq current-indent (+ previous-indent xquery-mode-indent-width)))
-                 ((memq previous-token '(open-xml-tag return-stmt if-stmt else-stmt namespace-stmt import-stmt))
+                 ((memq previous-token '(open-xml-tag-stmt return-stmt if-stmt else-stmt namespace-stmt import-stmt))
                   (setq current-indent (+ previous-indent previous-offset xquery-mode-indent-width)))
                  ((eq previous-token 'where-stmt)
                   (setq current-indent (+ previous-indent previous-offset 6)))
