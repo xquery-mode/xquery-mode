@@ -623,7 +623,8 @@ START and END are region boundaries."
            (grid (list (cons 'generic (mapcar #'cdr literals))
                        '(inside-comment comment-end-stmt colon-stmt word-stmt)))
            (non-pairs '(comment-end-stmt))
-           (aligned-pairs (append (cl-remove-if (lambda (x) (member x non-pairs))
+           (pairs '((close-curly-bracket-stmt open-curly-bracket-at-the-end-stmt open-curly-bracket-stmt function-stmt)))
+           (aligned-pairs (append (cl-remove-if (lambda (x) (member x (append non-pairs (mapcar #'car pairs))))
                                                 opposite
                                                 :key #'car)
                                   '((then-stmt if-stmt))))
@@ -671,6 +672,10 @@ START and END are region boundaries."
                   (setq current-indent (+ previous-indent previous-offset 1)))
                  ((eq previous-token 'comment-start-stmt)
                   (setq current-indent (+ previous-indent previous-offset 3)))
+                 ((cl-loop for pair in pairs
+                           thereis (and (eq (caar line-stream) (car pair))
+                                        (memq previous-token (cdr pair))))
+                  (setq current-indent previous-indent))
                  ((cl-loop for pair in aligned-pairs
                            thereis (and (eq (caar line-stream) (car pair))
                                         (memq previous-token (cdr pair))))
