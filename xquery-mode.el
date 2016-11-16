@@ -607,6 +607,9 @@ START and END are region boundaries."
                        ("\\<else\\>" . else-stmt)
                        ("\\<where\\>" . where-stmt)
                        ("\\<return\\>" . return-stmt)
+                       ("\\<typeswitch\\>" . typeswitch-stmt)
+                       ("\\<case\\>" . case-stmt)
+                       ("\\<default\\>" . default-stmt)
                        ("\\$\\(?:[[:alnum:]-_.:/]\\|\\[\\|\\]\\)+" . var-stmt)
                        ("\\(?:[[:alnum:]-_.:/]\\|\\[\\|\\]\\)+" . word-stmt)))
            (opposite '((close-curly-bracket-stmt open-curly-bracket-at-the-end-stmt open-curly-bracket-stmt function-stmt)
@@ -617,6 +620,7 @@ START and END are region boundaries."
                        (assign-stmt let-stmt)
                        (return-stmt where-stmt for-stmt)
                        (else-stmt if-stmt)
+                       (default-stmt typeswitch-stmt)
                        (semicolon-stmt namespace-stmt import-stmt)
                        (comment-end-stmt comment-start-stmt)
                        (expression-stmt return-stmt else-stmt assign-stmt double-quote-stmt quote-stmt)
@@ -633,14 +637,17 @@ START and END are region boundaries."
                                                 opposite
                                                 :key #'car)
                                   '((then-stmt if-stmt)
-                                    (let-stmt for-stmt))))
+                                    (let-stmt for-stmt)
+                                    (case-stmt typeswitch-stmt)
+                                    (comment-start-stmt typeswitch-stmt))))
            (expression-marks '(open-curly-bracket-at-the-end-stmt
                                open-curly-bracket-stmt
                                open-round-bracket-stmt
                                open-xml-tag-stmt
                                else-stmt
                                double-quote-stmt
-                               quote-stmt))
+                               quote-stmt
+                               typeswitch-stmt))
            (opening (apply #'append (mapcar #'cdr opposite)))
            (closing (mapcar #'car opposite))
            (re-table (mapcar (lambda (g)
@@ -690,7 +697,9 @@ START and END are region boundaries."
                   (setq current-indent (+ previous-indent previous-offset 1)))
                  ((memq previous-token '(open-curly-bracket-at-the-end-stmt function-stmt))
                   (setq current-indent (+ previous-indent xquery-mode-indent-width)))
-                 ((memq previous-token '(open-xml-tag-stmt return-stmt if-stmt else-stmt namespace-stmt import-stmt function-name-stmt))
+                 ((memq previous-token '(open-xml-tag-stmt
+                                         return-stmt if-stmt else-stmt namespace-stmt import-stmt
+                                         function-name-stmt typeswitch-stmt))
                   (setq current-indent (+ previous-indent previous-offset xquery-mode-indent-width)))
                  ((eq previous-token 'where-stmt)
                   (setq current-indent (+ previous-indent previous-offset 6)))
