@@ -590,7 +590,6 @@ START and END are region boundaries."
                        ("{" . open-curly-bracket-stmt)
                        ("}" . close-curly-bracket-stmt)
                        ("(" . open-round-bracket-stmt)
-                       (")\\s-*$" . close-round-bracket-at-the-end-stmt)
                        (")" . close-round-bracket-stmt)
                        ("<[^>/ ]+?\\>[^>]*>" . open-xml-tag-stmt)
                        ("</[^>]+>" . close-xml-tag-stmt)
@@ -615,7 +614,6 @@ START and END are region boundaries."
                        ("\\$\\(?:[[:alnum:]-_.:/]\\|\\[\\|\\]\\)+" . var-stmt)
                        ("\\(?:[[:alnum:]-_.:/]\\|\\[\\|\\]\\)+" . word-stmt)))
            (opposite '((close-curly-bracket-stmt open-curly-bracket-at-the-end-stmt open-curly-bracket-stmt function-stmt)
-                       (close-round-bracket-at-the-end-stmt open-round-bracket-stmt function-name-stmt)
                        (close-round-bracket-stmt open-round-bracket-stmt function-name-stmt)
                        (close-xml-tag-stmt open-xml-tag-stmt)
                        (double-quote-stmt double-quote-stmt)
@@ -636,7 +634,6 @@ START and END are region boundaries."
            (non-pairs '(comment-end-stmt var-stmt word-stmt))
            ;; TODO: This duplication makes me sad very often.
            (pairs '((close-curly-bracket-stmt open-curly-bracket-at-the-end-stmt open-curly-bracket-stmt function-stmt)
-                    (close-round-bracket-at-the-end-stmt open-round-bracket-stmt function-name-stmt)
                     (close-round-bracket-stmt open-round-bracket-stmt function-name-stmt)))
            (aligned-pairs (append (cl-remove-if (lambda (x) (member x (append non-pairs (mapcar #'car pairs))))
                                                 opposite
@@ -646,14 +643,14 @@ START and END are region boundaries."
                                     (order-by-stmt for-stmt)
                                     (case-stmt typeswitch-stmt)
                                     (comment-start-stmt typeswitch-stmt))))
-           (expression-marks '((open-curly-bracket-at-the-end-stmt . close-curly-bracket-stmt)
-                               (open-curly-bracket-stmt . close-curly-bracket-stmt)
-                               (open-round-bracket-stmt . close-round-bracket-at-the-end-stmt)
-                               (open-xml-tag-stmt . close-xml-tag-stmt)
-                               (else-stmt . expression-stmt)
-                               (double-quote-stmt . double-quote-stmt)
-                               (quote-stmt . quote-stmt)
-                               (typeswitch-stmt . default-stmt)))
+           (expression-marks '(open-curly-bracket-at-the-end-stmt
+                               open-curly-bracket-stmt
+                               open-round-bracket-stmt
+                               open-xml-tag-stmt
+                               else-stmt
+                               double-quote-stmt
+                               quote-stmt
+                               typeswitch-stmt))
            (opening (apply #'append (mapcar #'cdr opposite)))
            (closing (mapcar #'car opposite))
            (re-table (mapcar (lambda (g)
@@ -721,8 +718,7 @@ START and END are region boundaries."
                       (when (and (memq current-token closing)
                                  (memq (caar stream)
                                        (cdr (assoc current-token opposite))))
-                        (when (member (cons (car (pop stream)) current-token)
-                                      expression-marks)
+                        (when (memq (car (pop stream)) expression-marks)
                           (push '(expression-stmt current-offset) line-stream)))
                       (when (memq current-token opening)
                         (push (list current-token current-indent current-offset) stream)))))
