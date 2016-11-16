@@ -613,6 +613,7 @@ START and END are region boundaries."
                        ("\\<default\\>" . default-stmt)
                        ("\\$\\(?:[[:alnum:]-_.:/]\\|\\[\\|\\]\\)+" . var-stmt)
                        ("\\(?:[[:alnum:]-_.:/]\\|\\[\\|\\]\\)+" . word-stmt)))
+           ;; TODO: assign-stmt should be closed by strings and numbers.
            (opposite '((close-curly-bracket-stmt open-curly-bracket-at-the-end-stmt open-curly-bracket-stmt function-stmt)
                        (close-round-bracket-stmt open-round-bracket-stmt function-name-stmt)
                        (close-xml-tag-stmt open-xml-tag-stmt)
@@ -624,9 +625,9 @@ START and END are region boundaries."
                        (default-stmt typeswitch-stmt)
                        (semicolon-stmt namespace-stmt import-stmt assign-stmt)
                        (comment-end-stmt comment-start-stmt)
-                       (expression-stmt return-stmt else-stmt assign-stmt double-quote-stmt quote-stmt)
-                       (var-stmt assign-stmt)
-                       (word-stmt assign-stmt)))
+                       (expression-stmt return-stmt else-stmt assign-stmt double-quote-stmt quote-stmt function-call-stmt)
+                       (function-call-stmt return-stmt else-stmt assign-stmt)
+                       (var-stmt assign-stmt)))
            (next-re-table '((comment-start-stmt . inside-comment)
                             (comment-end-stmt . generic)))
            (grid (list (cons 'generic (mapcar #'cdr literals))
@@ -715,10 +716,15 @@ START and END are region boundaries."
                   (let ((token (pop line-stream)))
                     (cl-destructuring-bind (current-token current-offset)
                         token
+                      ;; TODO: this hardcoded behavior is bed design.
+                      (when (and (eq current-token 'word-stmt)
+                                 (eq (caar line-stream ) 'open-round-bracket-stmt))
+                        (push '(function-call-stmt current-offset) line-stream))
                       (when (and (memq current-token closing)
                                  (memq (caar stream)
                                        (cdr (assoc current-token opposite))))
                         (when (memq (car (pop stream)) expression-marks)
+                          ;; TODO: this hardcoded behavior is bed design as well.
                           (push '(expression-stmt current-offset) line-stream)))
                       (when (memq current-token opening)
                         (push (list current-token current-indent current-offset) stream)))))
