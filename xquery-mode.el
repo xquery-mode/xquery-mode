@@ -580,6 +580,8 @@ START and END are region boundaries."
   (save-excursion
     (let* ((literals '(("\\<define\\>\\s-+\\<function\\>.*{\\s-*$" . function-stmt)
                        ("\\<declare\\>\\s-+\\<function\\>.*{\\s-*$" . function-stmt)
+                       ("\\<define\\>\\s-+\\<function\\>.*(\\s-*$" . function-name-stmt)
+                       ("\\<declare\\>\\s-+\\<function\\>.*(\\s-*$" . function-name-stmt)
                        ("\\<module\\>\\s-+\\<namespace\\>" . namespace-stmt)
                        ("\\<import\\>\\s-+\\<module\\>" . import-stmt)
                        ("(:" . comment-start-stmt)
@@ -607,7 +609,7 @@ START and END are region boundaries."
                        ("\\$\\(?:[[:alnum:]-_.:/]\\|\\[\\|\\]\\)+" . var-stmt)
                        ("\\(?:[[:alnum:]-_.:/]\\|\\[\\|\\]\\)+" . word-stmt)))
            (opposite '((close-curly-bracket-stmt open-curly-bracket-at-the-end-stmt open-curly-bracket-stmt function-stmt)
-                       (close-round-bracket-stmt open-round-bracket-stmt)
+                       (close-round-bracket-stmt open-round-bracket-stmt function-name-stmt)
                        (close-xml-tag-stmt open-xml-tag-stmt)
                        (double-quote-stmt double-quote-stmt)
                        (quote-stmt quote-stmt)
@@ -623,7 +625,9 @@ START and END are region boundaries."
            (grid (list (cons 'generic (mapcar #'cdr literals))
                        '(inside-comment comment-end-stmt colon-stmt word-stmt)))
            (non-pairs '(comment-end-stmt))
-           (pairs '((close-curly-bracket-stmt open-curly-bracket-at-the-end-stmt open-curly-bracket-stmt function-stmt)))
+           ;; TODO: This duplication makes me sad very often.
+           (pairs '((close-curly-bracket-stmt open-curly-bracket-at-the-end-stmt open-curly-bracket-stmt function-stmt)
+                    (close-round-bracket-stmt open-round-bracket-stmt function-name-stmt)))
            (aligned-pairs (append (cl-remove-if (lambda (x) (member x (append non-pairs (mapcar #'car pairs))))
                                                 opposite
                                                 :key #'car)
@@ -684,7 +688,7 @@ START and END are region boundaries."
                   (setq current-indent (+ previous-indent previous-offset 1)))
                  ((memq previous-token '(open-curly-bracket-at-the-end-stmt function-stmt))
                   (setq current-indent (+ previous-indent xquery-mode-indent-width)))
-                 ((memq previous-token '(open-xml-tag-stmt return-stmt if-stmt else-stmt namespace-stmt import-stmt))
+                 ((memq previous-token '(open-xml-tag-stmt return-stmt if-stmt else-stmt namespace-stmt import-stmt function-name-stmt))
                   (setq current-indent (+ previous-indent previous-offset xquery-mode-indent-width)))
                  ((eq previous-token 'where-stmt)
                   (setq current-indent (+ previous-indent previous-offset 6)))
