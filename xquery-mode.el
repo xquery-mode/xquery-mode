@@ -625,12 +625,13 @@ START and END are region boundaries."
                        (semicolon-stmt namespace-stmt import-stmt)
                        (comment-end-stmt comment-start-stmt)
                        (expression-stmt return-stmt else-stmt assign-stmt double-quote-stmt quote-stmt)
-                       (newline-stmt assign-stmt)))
+                       (var-stmt assign-stmt)
+                       (word-stmt assign-stmt)))
            (next-re-table '((comment-start-stmt . inside-comment)
                             (comment-end-stmt . generic)))
            (grid (list (cons 'generic (mapcar #'cdr literals))
                        '(inside-comment comment-end-stmt colon-stmt word-stmt)))
-           (non-pairs '(comment-end-stmt))
+           (non-pairs '(comment-end-stmt var-stmt word-stmt))
            ;; TODO: This duplication makes me sad very often.
            (pairs '((close-curly-bracket-stmt open-curly-bracket-at-the-end-stmt open-curly-bracket-stmt function-stmt)
                     (close-round-bracket-stmt open-round-bracket-stmt function-name-stmt)))
@@ -697,7 +698,7 @@ START and END are region boundaries."
                   (setq current-indent (+ previous-indent previous-offset)))
                  ((memq previous-token '(open-curly-bracket-stmt open-round-bracket-stmt))
                   (setq current-indent (+ previous-indent previous-offset 1)))
-                 ((memq previous-token '(open-curly-bracket-at-the-end-stmt function-stmt))
+                 ((memq previous-token '(open-curly-bracket-at-the-end-stmt function-stmt assign-stmt))
                   (setq current-indent (+ previous-indent xquery-mode-indent-width)))
                  ((memq previous-token '(open-xml-tag-stmt
                                          return-stmt if-stmt else-stmt namespace-stmt import-stmt
