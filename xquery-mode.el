@@ -624,7 +624,7 @@ START and END are region boundaries."
                        (return-stmt where-stmt for-stmt)
                        (else-stmt if-stmt)
                        (default-stmt typeswitch-stmt)
-                       (semicolon-stmt namespace-stmt import-stmt)
+                       (semicolon-stmt namespace-stmt import-stmt assign-stmt)
                        (comment-end-stmt comment-start-stmt)
                        (expression-stmt return-stmt else-stmt assign-stmt double-quote-stmt quote-stmt)
                        (var-stmt assign-stmt)
