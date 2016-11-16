@@ -597,6 +597,7 @@ START and END are region boundaries."
                        ("\\\\'" . escaped-quote-stmt)
                        ("\"" . double-quote-stmt)
                        ("'" . quote-stmt)
+                       ("\\<for\\>" . for-stmt)
                        ("\\<let\\>" . let-stmt)
                        (":=" . assign-stmt)
                        (";" . semicolon-stmt)
@@ -614,7 +615,7 @@ START and END are region boundaries."
                        (double-quote-stmt double-quote-stmt)
                        (quote-stmt quote-stmt)
                        (assign-stmt let-stmt)
-                       (return-stmt where-stmt)
+                       (return-stmt where-stmt for-stmt)
                        (else-stmt if-stmt)
                        (semicolon-stmt namespace-stmt import-stmt)
                        (comment-end-stmt comment-start-stmt)
@@ -631,7 +632,8 @@ START and END are region boundaries."
            (aligned-pairs (append (cl-remove-if (lambda (x) (member x (append non-pairs (mapcar #'car pairs))))
                                                 opposite
                                                 :key #'car)
-                                  '((then-stmt if-stmt))))
+                                  '((then-stmt if-stmt)
+                                    (let-stmt for-stmt))))
            (expression-marks '(open-curly-bracket-at-the-end-stmt
                                open-curly-bracket-stmt
                                open-round-bracket-stmt
