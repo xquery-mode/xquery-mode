@@ -599,6 +599,7 @@ START and END are region boundaries."
                        ("'" . quote-stmt)
                        ("\\<for\\>" . for-stmt)
                        ("\\<let\\>" . let-stmt)
+                       ("\\<order\\>\\s-+\\<by\\>" . order-by-stmt)
                        (":=" . assign-stmt)
                        (";" . semicolon-stmt)
                        (":" . colon-stmt)
@@ -638,6 +639,7 @@ START and END are region boundaries."
                                                 :key #'car)
                                   '((then-stmt if-stmt)
                                     (let-stmt for-stmt)
+                                    (order-by-stmt for-stmt)
                                     (case-stmt typeswitch-stmt)
                                     (comment-start-stmt typeswitch-stmt))))
            (expression-marks '(open-curly-bracket-at-the-end-stmt
