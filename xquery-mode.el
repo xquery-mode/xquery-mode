@@ -613,6 +613,7 @@ START and END are region boundaries."
                        ("\\<default\\>" . default-stmt)
                        ("\\$\\(?:[[:alnum:]-_.:/]\\|\\[\\|\\]\\)+" . var-stmt)
                        ("\\(?:[[:alnum:]-_.:/]\\|\\[\\|\\]\\)+" . word-stmt)))
+           (keywords '(where-stmt))
            ;; TODO: assign-stmt should be closed by strings and numbers.
            (opposite '((close-curly-bracket-stmt open-curly-bracket-at-the-end-stmt open-curly-bracket-stmt function-stmt)
                        (close-round-bracket-stmt open-round-bracket-stmt function-name-stmt)
@@ -689,6 +690,17 @@ START and END are region boundaries."
                   (setq current-indent (+ previous-indent previous-offset 1)))
                  ((eq previous-token 'comment-start-stmt)
                   (setq current-indent (+ previous-indent previous-offset 3)))
+                 ;; TODO: Look ahead duplication.
+                 ((cl-loop for pair in pairs
+                           thereis (and (eq previous-token 'expression-body-stmt)
+                                        (eq (caar line-stream) (car pair))
+                                        (memq (cl-caadr stream) (cdr pair))))
+                  (setq current-indent (cl-cadadr stream)))
+                 ((cl-loop for pair in aligned-pairs
+                           thereis (and (eq previous-token 'expression-body-stmt)
+                                        (eq (caar line-stream) (car pair))
+                                        (memq (cl-caadr stream) (cdr pair))))
+                  (setq current-indent (+ (cl-cadadr stream) (cadr (cl-cdadr stream)))))
                  ((cl-loop for pair in pairs
                            thereis (and (eq (caar line-stream) (car pair))
                                         (memq previous-token (cdr pair))))
@@ -702,11 +714,12 @@ START and END are region boundaries."
                  ((memq previous-token '(open-curly-bracket-at-the-end-stmt function-stmt assign-stmt))
                   (setq current-indent (+ previous-indent xquery-mode-indent-width)))
                  ((memq previous-token '(open-xml-tag-stmt
-                                         return-stmt if-stmt else-stmt namespace-stmt import-stmt
+                                         return-stmt if-stmt else-stmt where-stmt
+                                         namespace-stmt import-stmt
                                          function-name-stmt typeswitch-stmt))
                   (setq current-indent (+ previous-indent previous-offset xquery-mode-indent-width)))
-                 ((eq previous-token 'where-stmt)
-                  (setq current-indent (+ previous-indent previous-offset 6)))
+                 ((eq previous-token 'expression-body-stmt)
+                  (setq current-indent (+ previous-indent previous-offset)))
                  ((eq previous-token 'buffer-beginning)
                   (setq current-indent 0))))
               (indent-line-to current-indent)
@@ -720,6 +733,12 @@ START and END are region boundaries."
                       (when (and (eq current-token 'word-stmt)
                                  (eq (caar line-stream ) 'open-round-bracket-stmt))
                         (push '(function-call-stmt current-offset) line-stream))
+                      ;; TODO: oh my...
+                      (when (and (eq (caar stream) 'expression-body-stmt)
+                                 (memq current-token closing)
+                                 (memq (cl-caadr stream)
+                                       (cdr (assoc current-token opposite))))
+                        (pop stream))
                       (when (and (memq current-token closing)
                                  (memq (caar stream)
                                        (cdr (assoc current-token opposite))))
@@ -727,7 +746,11 @@ START and END are region boundaries."
                           ;; TODO: this hardcoded behavior is bed design as well.
                           (push '(expression-stmt current-offset) line-stream)))
                       (when (memq current-token opening)
-                        (push (list current-token current-indent current-offset) stream)))))
+                        (push (list current-token current-indent current-offset) stream)
+                        ;; TODO: this is hardcoded as well.
+                        (when (and (memq current-token keywords)
+                                   (not (eq (caar line-stream) 'newline-stmt)))
+                          (push (list 'expression-body-stmt current-indent (cl-cadar line-stream)) stream))))))
                 (setq line-stream nil)
                 (forward-line)
                 (beginning-of-line)))
