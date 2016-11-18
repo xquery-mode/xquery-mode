@@ -613,7 +613,7 @@ START and END are region boundaries."
                        ("\\<default\\>" . default-stmt)
                        ("\\$\\(?:[[:alnum:]-_.:/]\\|\\[\\|\\]\\)+" . var-stmt)
                        ("\\(?:[[:alnum:]-_.:/]\\|\\[\\|\\]\\)+" . word-stmt)))
-           (keywords '(where-stmt))
+           (keywords '(where-stmt then-stmt))
            ;; TODO: assign-stmt should be closed by strings and numbers.
            (opposite '((close-curly-bracket-stmt open-curly-bracket-at-the-end-stmt open-curly-bracket-stmt function-stmt)
                        (close-round-bracket-stmt open-round-bracket-stmt function-name-stmt)
@@ -746,11 +746,11 @@ START and END are region boundaries."
                           ;; TODO: this hardcoded behavior is bed design as well.
                           (push '(expression-stmt current-offset) line-stream)))
                       (when (memq current-token opening)
-                        (push (list current-token current-indent current-offset) stream)
-                        ;; TODO: this is hardcoded as well.
-                        (when (and (memq current-token keywords)
-                                   (not (eq (caar line-stream) 'newline-stmt)))
-                          (push (list 'expression-body-stmt current-indent (cl-cadar line-stream)) stream))))))
+                        (push (list current-token current-indent current-offset) stream))
+                      ;; TODO: this is hardcoded as well.
+                      (when (and (memq current-token keywords)
+                                 (not (eq (caar line-stream) 'newline-stmt)))
+                        (push (list 'expression-body-stmt current-indent (cl-cadar line-stream)) stream)))))
                 (setq line-stream nil)
                 (forward-line)
                 (beginning-of-line)))
