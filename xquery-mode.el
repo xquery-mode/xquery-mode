@@ -578,9 +578,7 @@ be indented."
 START and END are region boundaries."
   (interactive "r")
   (save-excursion
-    (let* ((literals '(("\\<define\\>\\s-+\\<function\\>.*{\\s-*$" . function-stmt)
-                       ("\\<declare\\>\\s-+\\<function\\>.*{\\s-*$" . function-stmt)
-                       ("\\<define\\>\\s-+\\<function\\>.*(\\s-*$" . function-name-stmt)
+    (let* ((literals '(("\\<define\\>\\s-+\\<function\\>.*(\\s-*$" . function-name-stmt)
                        ("\\<declare\\>\\s-+\\<function\\>.*(\\s-*$" . function-name-stmt)
                        ("\\<module\\>\\s-+\\<namespace\\>" . namespace-stmt)
                        ("\\<import\\>\\s-+\\<module\\>" . import-stmt)
@@ -614,7 +612,7 @@ START and END are region boundaries."
                        ("\\(?:[[:alnum:]-_.:/]\\|\\[\\|\\]\\)+" . word-stmt)))
            (expression-starters '(where-stmt then-stmt open-curly-bracket-stmt))
            ;; TODO: assign-stmt should be closed by strings and numbers.
-           (opposite '((close-curly-bracket-stmt open-curly-bracket-stmt function-stmt)
+           (opposite '((close-curly-bracket-stmt open-curly-bracket-stmt)
                        (close-round-bracket-stmt open-round-bracket-stmt function-name-stmt)
                        (close-xml-tag-stmt open-xml-tag-stmt)
                        (double-quote-stmt double-quote-stmt)
@@ -634,7 +632,7 @@ START and END are region boundaries."
                        '(inside-comment comment-end-stmt colon-stmt word-stmt)))
            (non-pairs '(comment-end-stmt var-stmt word-stmt))
            ;; TODO: This duplication makes me sad very often.
-           (pairs '((close-curly-bracket-stmt open-curly-bracket-stmt function-stmt)
+           (pairs '((close-curly-bracket-stmt open-curly-bracket-stmt)
                     (close-round-bracket-stmt open-round-bracket-stmt function-name-stmt)))
            (aligned-pairs (append (cl-remove-if (lambda (x) (member x (append non-pairs (mapcar #'car pairs))))
                                                 opposite
@@ -709,7 +707,7 @@ START and END are region boundaries."
                   (setq current-indent (+ previous-indent previous-offset)))
                  ((eq previous-token 'open-round-bracket-stmt)
                   (setq current-indent (+ previous-indent previous-offset 1)))
-                 ((memq previous-token '(open-curly-bracket-stmt function-stmt assign-stmt))
+                 ((memq previous-token '(open-curly-bracket-stmt assign-stmt))
                   (setq current-indent (+ previous-indent xquery-mode-indent-width)))
                  ((memq previous-token '(open-xml-tag-stmt
                                          return-stmt if-stmt else-stmt where-stmt
