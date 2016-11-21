@@ -627,6 +627,8 @@ START and END are region boundaries."
                                   expression-end-stmt return-stmt)
                                 '(close-curly-bracket-stmt
                                   expression-end-stmt close-curly-bracket-stmt)
+                                '(close-round-bracket-stmt
+                                  close-round-bracket-stmt element-arg-end-stmt element-end-stmt)
                                 '(else-stmt
                                   expression-end-stmt else-stmt)))
            (on-close '((expression-start-stmt . expression-stmt)
@@ -639,6 +641,7 @@ START and END are region boundaries."
                        (quote-stmt . expression-stmt)
                        (typeswitch-stmt . expression-stmt)
                        ;; TODO: surround expr-start for return expr-end
+                       ;; TODO: surround expr-start if then else expr-end
                        (return-stmt . expression-stmt)))
            ;; TODO: assign-stmt should be closed by strings and numbers.
            (opposite '((close-curly-bracket-stmt open-curly-bracket-stmt)
@@ -653,6 +656,7 @@ START and END are region boundaries."
                        (semicolon-stmt namespace-stmt import-stmt assign-stmt)
                        (comment-end-stmt comment-start-stmt)
                        (expression-stmt return-stmt else-stmt assign-stmt double-quote-stmt quote-stmt function-call-stmt element-stmt element-arg-stmt)
+                       (element-end-stmt element-stmt)
                        (element-arg-end-stmt element-arg-stmt)
                        (expression-end-stmt expression-start-stmt)
                        (function-call-stmt return-stmt else-stmt assign-stmt)
