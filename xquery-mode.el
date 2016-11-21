@@ -610,7 +610,20 @@ START and END are region boundaries."
                        ("\\<default\\>" . default-stmt)
                        ("\\$\\(?:[[:alnum:]-_.:/]\\|\\[\\|\\]\\)+" . var-stmt)
                        ("\\(?:[[:alnum:]-_.:/]\\|\\[\\|\\]\\)+" . word-stmt)))
-           (expression-starters '(where-stmt then-stmt open-curly-bracket-stmt))
+           (substitutions '((var-stmt
+                             (lambda (stream line-stream found-literal offset)
+                               (when (eq (caar (append line-stream stream)) 'where-stmt)
+                                 (list 'expression-start-stmt offset)))
+                             var-stmt)
+                            (return-stmt
+                             expression-end-stmt return-stmt)))
+           (on-close '((open-curly-bracket-stmt . expression-stmt)
+                       (open-round-bracket-stmt . expression-stmt)
+                       (open-xml-tag-stmt . expression-stmt)
+                       (else-stmt . expression-stmt)
+                       (double-quote-stmt . expression-stmt)
+                       (quote-stmt . expression-stmt)
+                       (typeswitch-stmt . expression-stmt)))
            ;; TODO: assign-stmt should be closed by strings and numbers.
            (opposite '((close-curly-bracket-stmt open-curly-bracket-stmt)
                        (close-round-bracket-stmt open-round-bracket-stmt function-name-stmt)
@@ -624,12 +637,15 @@ START and END are region boundaries."
                        (semicolon-stmt namespace-stmt import-stmt assign-stmt)
                        (comment-end-stmt comment-start-stmt)
                        (expression-stmt return-stmt else-stmt assign-stmt double-quote-stmt quote-stmt function-call-stmt)
+                       (expression-end-stmt expression-start-stmt)
                        (function-call-stmt return-stmt else-stmt assign-stmt)
                        (var-stmt assign-stmt)))
+           (implicit-statements '(expression-end-stmt))
            (next-re-table '((comment-start-stmt . inside-comment)
                             (comment-end-stmt . generic)))
            (grid (list (cons 'generic (mapcar #'cdr literals))
                        '(inside-comment comment-end-stmt colon-stmt word-stmt)))
+           ;; TODO: make variable below calculated only.
            (non-pairs '(comment-end-stmt var-stmt word-stmt))
            ;; TODO: This duplication makes me sad very often.
            (pairs '((close-curly-bracket-stmt open-curly-bracket-stmt)
@@ -642,13 +658,6 @@ START and END are region boundaries."
                                     (order-by-stmt for-stmt)
                                     (case-stmt typeswitch-stmt)
                                     (comment-start-stmt typeswitch-stmt))))
-           (expression-marks '(open-curly-bracket-stmt
-                               open-round-bracket-stmt
-                               open-xml-tag-stmt
-                               else-stmt
-                               double-quote-stmt
-                               quote-stmt
-                               typeswitch-stmt))
            (opening (apply #'append (mapcar #'cdr opposite)))
            (closing (mapcar #'car opposite))
            (re-table (mapcar (lambda (g)
@@ -678,6 +687,12 @@ START and END are region boundaries."
             (progn
               (push (list 'newline-stmt (line-end-position)) line-stream)
               (setq line-stream (reverse line-stream))
+              (while (memq (caar line-stream) implicit-statements)
+                (let ((token (car (pop line-stream))))
+                  (when (and (memq token closing)
+                             (memq (caar stream)
+                                   (cdr (assoc token opposite))))
+                    (pop stream))))
               (cl-destructuring-bind (previous-token previous-indent previous-offset)
                   (car stream)
                 (cond
@@ -686,17 +701,6 @@ START and END are region boundaries."
                   (setq current-indent (+ previous-indent previous-offset 1)))
                  ((eq previous-token 'comment-start-stmt)
                   (setq current-indent (+ previous-indent previous-offset 3)))
-                 ;; TODO: Look ahead duplication.
-                 ((cl-loop for pair in pairs
-                           thereis (and (eq previous-token 'expression-body-stmt)
-                                        (eq (caar line-stream) (car pair))
-                                        (memq (cl-caadr stream) (cdr pair))))
-                  (setq current-indent (cl-cadadr stream)))
-                 ((cl-loop for pair in aligned-pairs
-                           thereis (and (eq previous-token 'expression-body-stmt)
-                                        (eq (caar line-stream) (car pair))
-                                        (memq (cl-caadr stream) (cdr pair))))
-                  (setq current-indent (+ (cl-cadadr stream) (cadr (cl-cdadr stream)))))
                  ((cl-loop for pair in pairs
                            thereis (and (eq (caar line-stream) (car pair))
                                         (memq previous-token (cdr pair))))
@@ -714,7 +718,7 @@ START and END are region boundaries."
                                          namespace-stmt import-stmt
                                          function-name-stmt typeswitch-stmt))
                   (setq current-indent (+ previous-indent previous-offset xquery-mode-indent-width)))
-                 ((eq previous-token 'expression-body-stmt)
+                 ((eq previous-token 'expression-start-stmt)
                   (setq current-indent (+ previous-indent previous-offset)))
                  ((eq previous-token 'buffer-beginning)
                   (setq current-indent 0))))
@@ -725,29 +729,20 @@ START and END are region boundaries."
                   (let ((token (pop line-stream)))
                     (cl-destructuring-bind (current-token current-offset)
                         token
-                      ;; TODO: this hardcoded behavior is bed design.
+                      ;; TODO: move to the substitutions
                       (when (and (eq current-token 'word-stmt)
                                  (eq (caar line-stream ) 'open-round-bracket-stmt))
                         (push '(function-call-stmt current-offset) line-stream))
-                      ;; TODO: oh my...
-                      (when (and (eq (caar stream) 'expression-body-stmt)
-                                 (memq current-token closing)
-                                 (memq (cl-caadr stream)
-                                       (cdr (assoc current-token opposite))))
-                        (pop stream))
                       (when (and (memq current-token closing)
                                  (memq (caar stream)
                                        (cdr (assoc current-token opposite))))
-                        (when (memq (car (pop stream)) expression-marks)
-                          ;; TODO: this hardcoded behavior is bed design as well.
-                          (push '(expression-stmt current-offset) line-stream)))
+                        (let* ((closed (car (pop stream)))
+                               (trigger (cdr (assoc closed on-close))))
+                          ;; TODO: move this to the search part.
+                          (when trigger
+                            (push (list trigger current-offset) line-stream))))
                       (when (memq current-token opening)
-                        (push (list current-token current-indent current-offset) stream))
-                      ;; TODO: this is hardcoded as well.
-                      (when (and (memq current-token expression-starters)
-                                 (not (eq (caar line-stream) 'newline-stmt)))
-                        (push (list 'expression-body-stmt current-indent (cl-cadar line-stream)) stream)))))
-                (setq line-stream nil)
+                        (push (list current-token current-indent current-offset) stream)))))
                 (forward-line)
                 (beginning-of-line)))
           (let* ((matched-group (cl-find-if #'match-string-no-properties groups))
@@ -755,7 +750,15 @@ START and END are region boundaries."
                  (offset (- (current-column)
                             (current-indentation)
                             (length (match-string-no-properties 0)))))
-            (push (list found-literal offset) line-stream)
+            (let ((substitution (cdr (assoc found-literal substitutions))))
+              (if substitution
+                  (dolist (s substitution)
+                    (if (symbolp s)
+                        (push (list s offset) line-stream)
+                      (let ((result (apply s stream line-stream found-literal offset nil)))
+                        (when result
+                          (push result line-stream)))))
+                (push (list found-literal offset) line-stream)))
             (let ((next-re-key (cdr (assoc found-literal next-re-table))))
               (when next-re-key
                 (cl-destructuring-bind (next-re-re next-re-groups next-re-lookups)
