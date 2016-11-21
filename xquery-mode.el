@@ -610,17 +610,20 @@ START and END are region boundaries."
                        ("\\<default\\>" . default-stmt)
                        ("\\$\\(?:[[:alnum:]-_.:/]\\|\\[\\|\\]\\)+" . var-stmt)
                        ("\\(?:[[:alnum:]-_.:/]\\|\\[\\|\\]\\)+" . word-stmt)))
-           (substitutions (list (list
-                                 'var-stmt
-                                 (lambda (stream line-stream found-literal offset)
+           (lookup-expression-fn (lambda (stream line-stream found-literal offset)
                                    (when (memq (caar (append line-stream stream))
-                                               '(where-stmt open-curly-bracket-stmt))
-                                     (list 'expression-start-stmt offset)))
-                                 'var-stmt)
+                                               '(where-stmt open-curly-bracket-stmt then-stmt))
+                                     (list 'expression-start-stmt offset))))
+           (substitutions (list (list 'var-stmt
+                                      lookup-expression-fn 'var-stmt)
+                                (list 'word-stmt
+                                      lookup-expression-fn 'word-stmt)
                                 '(return-stmt
                                   expression-end-stmt return-stmt)
                                 '(close-curly-bracket-stmt
-                                  expression-end-stmt close-curly-bracket-stmt)))
+                                  expression-end-stmt close-curly-bracket-stmt)
+                                '(else-stmt
+                                  expression-end-stmt else-stmt)))
            (on-close '((open-curly-bracket-stmt . expression-stmt)
                        (open-round-bracket-stmt . expression-stmt)
                        (open-xml-tag-stmt . expression-stmt)
