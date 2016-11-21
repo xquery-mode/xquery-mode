@@ -612,19 +612,22 @@ START and END are region boundaries."
                        ("\\(?:[[:alnum:]-_.:/]\\|\\[\\|\\]\\)+" . word-stmt)))
            (lookup-expression-fn (lambda (stream line-stream found-literal offset)
                                    (when (memq (caar (append line-stream stream))
-                                               '(where-stmt open-curly-bracket-stmt then-stmt))
+                                               '(where-stmt open-curly-bracket-stmt then-stmt else-stmt))
                                      (list 'expression-start-stmt offset))))
            (substitutions (list (list 'var-stmt
                                       lookup-expression-fn 'var-stmt)
                                 (list 'word-stmt
                                       lookup-expression-fn 'word-stmt)
+                                '(where-stmt
+                                  expression-end-stmt where-stmt)
                                 '(return-stmt
                                   expression-end-stmt return-stmt)
                                 '(close-curly-bracket-stmt
                                   expression-end-stmt close-curly-bracket-stmt)
                                 '(else-stmt
                                   expression-end-stmt else-stmt)))
-           (on-close '((open-curly-bracket-stmt . expression-stmt)
+           (on-close '((expression-start-stmt . expression-stmt)
+                       (open-curly-bracket-stmt . expression-stmt)
                        (open-round-bracket-stmt . expression-stmt)
                        (open-xml-tag-stmt . expression-stmt)
                        (else-stmt . expression-stmt)
@@ -647,7 +650,7 @@ START and END are region boundaries."
                        (expression-end-stmt expression-start-stmt)
                        (function-call-stmt return-stmt else-stmt assign-stmt)
                        (var-stmt assign-stmt)))
-           (implicit-statements '(expression-end-stmt))
+           (implicit-statements '(expression-end-stmt expression-stmt))
            (next-re-table '((comment-start-stmt . inside-comment)
                             (comment-end-stmt . generic)))
            (grid (list (cons 'generic (mapcar #'cdr literals))
@@ -699,7 +702,11 @@ START and END are region boundaries."
                   (when (and (memq token closing)
                              (memq (caar stream)
                                    (cdr (assoc token opposite))))
-                    (pop stream))))
+                    (let* ((closed (car (pop stream)))
+                           (trigger (cdr (assoc closed on-close))))
+                      ;; TODO: move this to the search part.
+                      (when trigger
+                        (push (list trigger nil) line-stream))))))
               (cl-destructuring-bind (previous-token previous-indent previous-offset)
                   (car stream)
                 (cond
