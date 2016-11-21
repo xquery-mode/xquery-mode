@@ -608,6 +608,7 @@ START and END are region boundaries."
                        ("\\<typeswitch\\>" . typeswitch-stmt)
                        ("\\<case\\>" . case-stmt)
                        ("\\<default\\>" . default-stmt)
+                       ("\\<element\\>" . element-stmt)
                        ("\\$\\(?:[[:alnum:]-_.:/]\\|\\[\\|\\]\\)+" . var-stmt)
                        ("\\(?:[[:alnum:]-_.:/]\\|\\[\\|\\]\\)+" . word-stmt)))
            (lookup-expression-fn (lambda (stream line-stream found-literal offset)
@@ -617,7 +618,9 @@ START and END are region boundaries."
            (substitutions (list (list 'var-stmt
                                       lookup-expression-fn 'var-stmt)
                                 (list 'word-stmt
-                                      lookup-expression-fn 'word-stmt)
+                                      lookup-expression-fn 'word-stmt 'element-arg-end-stmt)
+                                '(element-stmt
+                                  element-stmt element-arg-stmt)
                                 '(where-stmt
                                   expression-end-stmt where-stmt)
                                 '(return-stmt
@@ -627,13 +630,16 @@ START and END are region boundaries."
                                 '(else-stmt
                                   expression-end-stmt else-stmt)))
            (on-close '((expression-start-stmt . expression-stmt)
+                       (element-stmt . expression-stmt)
                        (open-curly-bracket-stmt . expression-stmt)
                        (open-round-bracket-stmt . expression-stmt)
                        (open-xml-tag-stmt . expression-stmt)
                        (else-stmt . expression-stmt)
                        (double-quote-stmt . expression-stmt)
                        (quote-stmt . expression-stmt)
-                       (typeswitch-stmt . expression-stmt)))
+                       (typeswitch-stmt . expression-stmt)
+                       ;; TODO: surround expr-start for return expr-end
+                       (return-stmt . expression-stmt)))
            ;; TODO: assign-stmt should be closed by strings and numbers.
            (opposite '((close-curly-bracket-stmt open-curly-bracket-stmt)
                        (close-round-bracket-stmt open-round-bracket-stmt function-name-stmt)
@@ -646,7 +652,8 @@ START and END are region boundaries."
                        (default-stmt typeswitch-stmt)
                        (semicolon-stmt namespace-stmt import-stmt assign-stmt)
                        (comment-end-stmt comment-start-stmt)
-                       (expression-stmt return-stmt else-stmt assign-stmt double-quote-stmt quote-stmt function-call-stmt)
+                       (expression-stmt return-stmt else-stmt assign-stmt double-quote-stmt quote-stmt function-call-stmt element-stmt element-arg-stmt)
+                       (element-arg-end-stmt element-arg-stmt)
                        (expression-end-stmt expression-start-stmt)
                        (function-call-stmt return-stmt else-stmt assign-stmt)
                        (var-stmt assign-stmt)))
@@ -660,6 +667,7 @@ START and END are region boundaries."
            ;; TODO: This duplication makes me sad very often.
            (pairs '((close-curly-bracket-stmt open-curly-bracket-stmt)
                     (close-round-bracket-stmt open-round-bracket-stmt function-name-stmt)))
+           ;; TODO: that's not good at all.
            (aligned-pairs (append (cl-remove-if (lambda (x) (member x (append non-pairs (mapcar #'car pairs))))
                                                 opposite
                                                 :key #'car)
@@ -743,7 +751,8 @@ START and END are region boundaries."
                   (let ((token (pop line-stream)))
                     (cl-destructuring-bind (current-token current-offset)
                         token
-                      ;; TODO: move to the substitutions
+                      ;; TODO: move to the substitutions.  Maybe
+                      ;; remove function call at all.
                       (when (and (eq current-token 'word-stmt)
                                  (eq (caar line-stream ) 'open-round-bracket-stmt))
                         (push '(function-call-stmt current-offset) line-stream))
