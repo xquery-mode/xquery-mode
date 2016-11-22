@@ -23,7 +23,7 @@
             ;; FIXME: Revert this temporarily disabled TAB mutation.
             (replace-match (make-string (random 20) ? )))
           (xquery-mode)
-          (xquery-mode-indent-region (point-min) (point-max))
+          (indent-region (point-min) (point-max))
           (delete-trailing-whitespace)  ;; FIXME: Remove duty cleanup.
           (should (string= (buffer-substring-no-properties (point-min) (point-max))
                            ,fixture)))))))

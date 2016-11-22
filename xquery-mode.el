@@ -47,12 +47,14 @@
 (defun turn-on-xquery-tab-to-tab-indent ()
   "Turn on tab-to-tab XQuery-mode indentation."
   (define-key xquery-mode-map (kbd "TAB") 'tab-to-tab-stop)
-  (kill-local-variable 'indent-line-function))
+  (kill-local-variable 'indent-line-function)
+  (kill-local-variable 'indent-region-function))
 
 (defun turn-on-xquery-native-indent ()
   "Turn on native XQuery-mode indentation."
   (define-key xquery-mode-map (kbd "TAB") 'indent-for-tab-command)
-  (set (make-local-variable 'indent-line-function) 'xquery-indent-line))
+  (set (make-local-variable 'indent-line-function) 'xquery-indent-line)
+  (set (make-local-variable 'indent-region-function) 'xquery-mode-indent-region))
 
 (defun toggle-xquery-mode-indent-style ()
   "Switch to the next indentation style."
