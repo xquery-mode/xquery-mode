@@ -699,13 +699,18 @@ START and END are region boundaries."
                                  (list name re groups group-lookup)))
                              grid))  ;; TODO: skip inside strings too.
            (current-indent 0)
-           (stream '((buffer-beginning 0 0)))
            (re (cadr (assoc 'generic re-table)))
            (groups (cl-caddr (assoc 'generic re-table)))
            (group-lookup (cl-cadddr (assoc 'generic re-table)))
+           stream
            line-stream
+           align-column
            exit)
-      (goto-char (point-min))
+      (goto-char start)
+      (if (eq (forward-line -1) -1)
+          (setq align-column 0)
+        (setq align-column (current-indentation)))
+      (push (list 'buffer-beginning align-column 0) stream)
       (while (not exit)
         (if (not (re-search-forward re (line-end-position) t))
             (progn
@@ -749,8 +754,10 @@ START and END are region boundaries."
                  ((eq previous-token 'expression-start-stmt)
                   (setq current-indent (+ previous-indent previous-offset)))
                  ((eq previous-token 'buffer-beginning)
-                  (setq current-indent 0))))
-              (indent-line-to current-indent)
+                  (setq current-indent previous-indent))))
+              (when (<= start (point) end)
+                (setq end (+ end (- current-indent (current-indentation))))
+                (indent-line-to current-indent))
               (if (eq (line-end-position) (point-max))
                   (setq exit t)
                 (while line-stream

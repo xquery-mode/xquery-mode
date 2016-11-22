@@ -28,6 +28,19 @@
           (should (string= (buffer-substring-no-properties (point-min) (point-max))
                            ,fixture)))))))
 
+(ert-deftest test-xquery-mode-indent-buffer-part ()
+  "Indent only part of the buffer."
+  (with-current-buffer (generate-new-buffer "*fixture-buffer-part*")
+    (insert "
+  return
+<tr>")
+    (goto-char (point-min))
+    (xquery-mode)
+    (indent-region 11 15)
+    (should (string= "
+  return
+    <tr>" (buffer-substring-no-properties (point-min) (point-max))))))
+
 (provide 'xquery-mode-test)
 
 ;;; xquery-mode-test.el ends here
