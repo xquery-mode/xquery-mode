@@ -41,6 +41,22 @@
   return
     <tr>" (buffer-substring-no-properties (point-min) (point-max))))))
 
+(ert-deftest test-xquery-mode-indent-line ()
+  "Indent current line."
+  (with-current-buffer (generate-new-buffer "*fixture-buffer-part*")
+    (insert "
+  return
+<tr>
+<td>")
+    (goto-char (point-min))
+    (xquery-mode)
+    (goto-char 12)
+    (indent-for-tab-command)
+    (should (string= "
+  return
+    <tr>
+<td>" (buffer-substring-no-properties (point-min) (point-max))))))
+
 (provide 'xquery-mode-test)
 
 ;;; xquery-mode-test.el ends here
