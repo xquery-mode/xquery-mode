@@ -357,6 +357,7 @@ START and END are region boundaries."
   (save-excursion
     (let* ((literals '(("\\<define\\>\\s-+\\<function\\>.*(\\s-*$" . function-name-stmt)
                        ("\\<declare\\>\\s-+\\<function\\>.*(\\s-*$" . function-name-stmt)
+                       ("\\<declare\\>\\s-+\\<variable\\>" . declare-variable-stmt)
                        ("\\<module\\>\\s-+\\<namespace\\>" . namespace-stmt)
                        ("\\<import\\>\\s-+\\<module\\>" . import-stmt)
                        ("(:" . comment-start-stmt)
@@ -430,7 +431,7 @@ START and END are region boundaries."
                        (return-stmt where-stmt for-stmt)
                        (else-stmt if-stmt)
                        (default-stmt typeswitch-stmt)
-                       (semicolon-stmt namespace-stmt import-stmt assign-stmt)
+                       (semicolon-stmt declare-variable-stmt namespace-stmt import-stmt assign-stmt)
                        (comment-end-stmt comment-start-stmt)
                        (expression-stmt return-stmt else-stmt assign-stmt double-quote-stmt quote-stmt function-call-stmt element-stmt element-arg-stmt)
                        (element-end-stmt element-stmt)
@@ -523,7 +524,7 @@ START and END are region boundaries."
                   (setq current-indent (+ previous-indent xquery-mode-indent-width)))
                  ((memq previous-token '(open-xml-tag-stmt
                                          return-stmt if-stmt else-stmt where-stmt
-                                         namespace-stmt import-stmt
+                                         declare-variable-stmt namespace-stmt import-stmt
                                          function-name-stmt typeswitch-stmt))
                   (setq current-indent (+ previous-indent previous-offset xquery-mode-indent-width)))
                  ((eq previous-token 'expression-start-stmt)
