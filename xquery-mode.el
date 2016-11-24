@@ -384,6 +384,7 @@ START and END are region boundaries."
                        ("," . comma-stmt)
                        ("\\<if\\>" . if-stmt)
                        ("\\<then\\>" . then-stmt)
+                       ("\\<else\\>\\s-+\\<if\\>" . else-if-stmt)
                        ("\\<else\\>" . else-stmt)
                        ("\\<where\\>" . where-stmt)
                        ("\\<return\\>" . return-stmt)
@@ -417,6 +418,8 @@ START and END are region boundaries."
                                   expression-end-stmt close-round-bracket-stmt element-arg-end-stmt element-end-stmt)
                                 '(else-stmt
                                   expression-end-stmt else-stmt)
+                                '(else-if-stmt
+                                  expression-end-stmt else-if-stmt)
                                 '(default-stmt
                                   expression-end-stmt default-stmt)
                                 '(let-stmt
@@ -485,6 +488,7 @@ START and END are region boundaries."
                                                 opposite
                                                 :key #'car)
                                   '((then-stmt if-stmt)
+                                    (else-if-stmt if-stmt)
                                     (let-stmt for-stmt)
                                     (order-by-stmt for-stmt)
                                     (case-stmt typeswitch-stmt)
