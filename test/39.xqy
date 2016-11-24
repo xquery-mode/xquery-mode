@@ -36,7 +36,7 @@ declare variable $rest-impl:FAILEDCONDITION   := xs:QName("rest:FAILEDCONDITION"
    library shipped with MarkLogic Server, we actually import a debug
    module that contains the logging function. Here we just put in a
    local function for convenience.
-:)
+ :)
 
 declare variable $rest-impl:DEBUG as xs:boolean := false();
 
@@ -73,19 +73,19 @@ declare function rest-impl:dump-reqenv(
 };
 
 (:
-declare function rest-impl:dump-map(
-  $map as map:map,
-  $title as xs:string?
-) as empty-sequence()
-{
-  (xdmp:log("<map>"),
+   declare function rest-impl:dump-map(
+   $map as map:map,
+   $title as xs:string?
+   ) as empty-sequence()
+   {
+   (xdmp:log("<map>"),
    if (empty($title)) then () else xdmp:log($title),
    for $name in map:keys($map)
    return
    xdmp:log(concat($name, "=(", string-join(map:get($map, $name), ", "), ")")),
    xdmp:log("</map>"))
-};
-:)
+   };
+ :)
 
 (: ====================================================================== :)
 
@@ -108,7 +108,7 @@ declare function rest-impl:rewrite(
      is *both* a URI param and is passed on the URI, we need to make sure that we
      don't duplicate it. And another wrinkle: we want to make defaulted parameters
      explicit in order to make the endpoint's job easier.
-  :)
+   :)
 
   let $uriparams
     := for $name in $request/rest:uri-param/@name
@@ -306,7 +306,7 @@ declare function rest-impl:params(
   (: Add the uri-param parameters to the map. If we're processing a request, then the
      rewriter will already have put the uri-params in the user-params during the
      rewrite, so just copy them over
-  :)
+   :)
   let $_   := for $param in $request/rest:uri-param
               return
                 if ($process-request)
@@ -404,48 +404,48 @@ as xs:boolean
 
   let $errors
     := (
-         (: check for missing required params :)
-         for $param in $req-params
-         where ($param/@required="true")
-         return
-           if (map:get($params, $param/@name))
-           then ()
-           else
-             rest-impl:no-match($raise-errors, $rest-impl:REQUIREDPARAM, $param/@name),
+        (: check for missing required params :)
+        for $param in $req-params
+        where ($param/@required="true")
+        return
+          if (map:get($params, $param/@name))
+          then ()
+          else
+            rest-impl:no-match($raise-errors, $rest-impl:REQUIREDPARAM, $param/@name),
 
-         (: check for extra params :)
-         if ($user-params = "" or $user-params = "forbid")
-         then
-           for $name in map:keys($params)
-           where not($uri-params[@name=$name]) and not($req-params[@name=$name])
-           return
-             rest-impl:no-match($raise-errors, $rest-impl:UNSUPPORTEDPARAM, $name)
-         else
-           (),
+        (: check for extra params :)
+        if ($user-params = "" or $user-params = "forbid")
+        then
+          for $name in map:keys($params)
+          where not($uri-params[@name=$name]) and not($req-params[@name=$name])
+          return
+            rest-impl:no-match($raise-errors, $rest-impl:UNSUPPORTEDPARAM, $name)
+        else
+          (),
 
-         (: check for incorrectly repeated params :)
-         for $param in $req-params
-         let $name := $param/@name
-         where ((empty($param/@repeatable) or $param/@repeatable="false")
-                and (count(map:get($params, $name)) > 1))
-         return
-           rest-impl:no-match($raise-errors, $rest-impl:REPEATEDPARAM, $name),
+        (: check for incorrectly repeated params :)
+        for $param in $req-params
+        let $name := $param/@name
+        where ((empty($param/@repeatable) or $param/@repeatable="false")
+               and (count(map:get($params, $name)) > 1))
+        return
+          rest-impl:no-match($raise-errors, $rest-impl:REPEATEDPARAM, $name),
 
-         (: check for param types :)
-         for $param in ($uri-params[@as]|$req-params[@as]
-                        |$uri-params[@values]|$req-params[@values])
-         let $as     := if ($param/@as) then normalize-space($param/@as) else "string"
-         let $legal-values := if ($param/@values) then string($param/@values) else ()
-         let $values  := map:get($params, $param/@name)
-         return
-           for $value in $values
-           where not(rest-impl:valid-atomic-type($value, $as, $legal-values))
-           return
-             rest-impl:no-match($raise-errors, $rest-impl:INVALIDTYPE,
-                                concat($value, " as ",
-                                if (empty($legal-values))
-                                then $as
-                                else concat("(", $legal-values, ")")))
+        (: check for param types :)
+        for $param in ($uri-params[@as]|$req-params[@as]
+                       |$uri-params[@values]|$req-params[@values])
+        let $as     := if ($param/@as) then normalize-space($param/@as) else "string"
+        let $legal-values := if ($param/@values) then string($param/@values) else ()
+        let $values  := map:get($params, $param/@name)
+        return
+          for $value in $values
+          where not(rest-impl:valid-atomic-type($value, $as, $legal-values))
+          return
+            rest-impl:no-match($raise-errors, $rest-impl:INVALIDTYPE,
+                               concat($value, " as ",
+                               if (empty($legal-values))
+                               then $as
+                               else concat("(", $legal-values, ")")))
        )
   return
     empty($errors)
@@ -541,12 +541,12 @@ as xs:string*
                else ()
            else ()
        else ()
-(:
-  let $_ := for $i in map:keys($accept-map)
-            return rest-impl:log(concat("   accept: ", $i, ": ", map:get($accept-map,$i)))
-  let $_ := for $i in map:keys($match-map)
-            return rest-impl:log(concat("   match : ", $i, ": ", map:get($match-map,$i)))
-:)
+  (:
+     let $_ := for $i in map:keys($accept-map)
+     return rest-impl:log(concat("   accept: ", $i, ": ", map:get($accept-map,$i)))
+     let $_ := for $i in map:keys($match-map)
+     return rest-impl:log(concat("   match : ", $i, ": ", map:get($match-map,$i)))
+   :)
 
   (: Ok. Now where are we?
 
@@ -566,7 +566,7 @@ as xs:string*
      ... brute force. Grab each group of values with the same q= value
      (in descending order) and select the members of that group in
      ascending order by position.
-  :)
+   :)
 
   let $all-q-values := distinct-values(for $i in map:keys($match-map)
                                        return map:get($match-map, $i))
@@ -795,19 +795,19 @@ as xs:boolean*
   let $value
     := typeswitch($cond)
        case element(rest:or)
-       return rest-impl:or($request, $reqenv, $cond/*, $raise-errors)
+         return rest-impl:or($request, $reqenv, $cond/*, $raise-errors)
        case element(rest:and)
-       return rest-impl:and($request, $reqenv, $cond/*, $raise-errors)
+         return rest-impl:and($request, $reqenv, $cond/*, $raise-errors)
        case element(rest:function)
-       return rest-impl:function($request, $reqenv, $cond, $raise-errors)
+         return rest-impl:function($request, $reqenv, $cond, $raise-errors)
        case element(rest:auth)
-       return rest-impl:auth($request, $reqenv, $cond, $raise-errors)
+         return rest-impl:auth($request, $reqenv, $cond, $raise-errors)
        case element(rest:user-agent)
-       return rest-impl:user-agent($request, $reqenv, $cond, $raise-errors)
+         return rest-impl:user-agent($request, $reqenv, $cond, $raise-errors)
        case element(rest:accept)
-       return rest-impl:accepts-type($request, $reqenv, $cond, $raise-errors)
+         return rest-impl:accepts-type($request, $reqenv, $cond, $raise-errors)
        default
-       return error($rest-impl:INVALIDCONDITION, concat(node-name($cond), " is not a condition"))
+         return error($rest-impl:INVALIDCONDITION, concat(node-name($cond), " is not a condition"))
   return
     $value
 };
@@ -945,8 +945,7 @@ declare function rest-impl:check-options(
 {
   (
     let $x := try { validate strict { $options } }
-              catch ($e)
-              { <rest:report id="REST-SCHEMAINVALID">{$e/*:format-string, $e/*:data}</rest:report> }
+              catch ($e) { <rest:report id="REST-SCHEMAINVALID">{$e/*:format-string, $e/*:data}</rest:report> }
     return
       if ($x/self::rest:report)
       then $x
@@ -963,66 +962,67 @@ declare function rest-impl:check-request(
 ) as element(rest:report)*
 {
   (
-    (: must be schema valid :)
-    let $x := try { validate strict { $request } }
-              catch ($e)
-              { <rest:report id="REST-SCHEMAINVALID">{$e/*:format-string, $e/*:data}</rest:report> }
-    return
-      if ($x/self::rest:report)
-      then $x
-      else ()
-    ,
-    (: must identify a known type :)
-    for $param in ($request/rest:uri-param[@as], $request//rest:param[@as])
-    return
-      if (normalize-space($param/@as) = $rest-impl:KNOWN_TYPES)
-      then
-        ()
-      else
-        <rest:report id="BAD-TYPE">{string($param/@as)} is not a valid type.</rest:report>
-    ,
-    (: must list only a single method :)
-    for $method in distinct-values(for $method in $request/rest:http/@method
-                                   return tokenize($method, '\s+'))
-    return
-      if (count(rest-impl:http-method($request,$method)) > 1)
-      then
-        <rest:report id="DUP-METHOD">
-          {concat("Duplicate entry for http method: ", $method)}
-        </rest:report>
-      else
-        ()
-    ,
-    (: cannot be required and have a default :)
-    for $param in ($request//rest:param[@required and @default])
-    return
-      <rest:report id="INVALID">
-        {concat($param/@name, " is required and has default")}
-      </rest:report>
-    ,
-    (: cannot have content unless there's a match :)
-    for $param in ($request//rest:param[not(@match) and exists(node())])
-    return
-      <rest:report id="INVALID">
-        {concat($param/@name, " has content but no @match")}
-      </rest:report>,
-    (: cannot have duplicate aliases :)
-    let $aliases := for $param in ($request//rest:param[@alias])
-                    return
-                      tokenize($param/@alias, "\s*\|\s*")
-    return
-      (for $alias in distinct-values($aliases)
-       where count($aliases[.=$alias]) > 1
-       return
-         <rest:report id="INVALID">
-          { concat("Duplicate alias in request: ", $alias) }
-         </rest:report>,
-       for $alias in $aliases
-       where exists($request//rest:param[@name = $alias])
-       return
-         <rest:report id="INVALID">
-          { concat("Alias shadows named parameter: ", $alias) }
-         </rest:report>)
+   (: must be schema valid :)
+   let $x := try
+               { validate strict { $request } }
+             catch ($e)
+               { <rest:report id="REST-SCHEMAINVALID">{$e/*:format-string, $e/*:data}</rest:report> }
+   return
+     if ($x/self::rest:report)
+     then $x
+     else ()
+   ,
+   (: must identify a known type :)
+   for $param in ($request/rest:uri-param[@as], $request//rest:param[@as])
+   return
+     if (normalize-space($param/@as) = $rest-impl:KNOWN_TYPES)
+     then
+       ()
+     else
+       <rest:report id="BAD-TYPE">{string($param/@as)} is not a valid type.</rest:report>
+   ,
+   (: must list only a single method :)
+   for $method in distinct-values(for $method in $request/rest:http/@method
+                                  return tokenize($method, '\s+'))
+   return
+     if (count(rest-impl:http-method($request,$method)) > 1)
+     then
+       <rest:report id="DUP-METHOD">
+         {concat("Duplicate entry for http method: ", $method)}
+       </rest:report>
+     else
+       ()
+   ,
+   (: cannot be required and have a default :)
+   for $param in ($request//rest:param[@required and @default])
+   return
+     <rest:report id="INVALID">
+       {concat($param/@name, " is required and has default")}
+     </rest:report>
+   ,
+   (: cannot have content unless there's a match :)
+   for $param in ($request//rest:param[not(@match) and exists(node())])
+   return
+     <rest:report id="INVALID">
+       {concat($param/@name, " has content but no @match")}
+     </rest:report>,
+   (: cannot have duplicate aliases :)
+   let $aliases := for $param in ($request//rest:param[@alias])
+                   return
+                     tokenize($param/@alias, "\s*\|\s*")
+   return
+     (for $alias in distinct-values($aliases)
+      where count($aliases[.=$alias]) > 1
+      return
+        <rest:report id="INVALID">
+         { concat("Duplicate alias in request: ", $alias) }
+        </rest:report>,
+      for $alias in $aliases
+      where exists($request//rest:param[@name = $alias])
+      return
+        <rest:report id="INVALID">
+         { concat("Alias shadows named parameter: ", $alias) }
+        </rest:report>)
   )
 };
 
