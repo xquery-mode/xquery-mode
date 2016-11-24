@@ -536,7 +536,8 @@ START and END are region boundaries."
                   (setq current-indent (+ previous-indent xquery-mode-indent-width)))
                  ((memq previous-token '(open-xml-tag-stmt
                                          return-stmt if-stmt else-stmt where-stmt
-                                         declare-variable-stmt namespace-stmt import-stmt
+                                         let-stmt declare-variable-stmt
+                                         namespace-stmt import-stmt
                                          function-name-stmt typeswitch-stmt))
                   (setq current-indent (+ previous-indent previous-offset xquery-mode-indent-width)))
                  ((eq previous-token 'expression-start-stmt)
