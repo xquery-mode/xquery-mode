@@ -443,10 +443,10 @@ as xs:boolean
           return
             rest-impl:no-match($raise-errors, $rest-impl:INVALIDTYPE,
                                concat($value, " as ",
-                               if (empty($legal-values))
-                               then $as
-                               else concat("(", $legal-values, ")")))
-       )
+                                      if (empty($legal-values))
+                                      then $as
+                                      else concat("(", $legal-values, ")")))
+    )
   return
     empty($errors)
 };
@@ -477,12 +477,12 @@ as xs:boolean
 {
   let $mtypes := rest-impl:get-return-types($types, $accept)
   return
-  if (empty($mtypes))
-  then
-    rest-impl:no-match($raise-errors, $rest-impl:UNACCEPTABLETYPE,
-                       string-join(for $type in $mtypes return concat("'",$type,"'"), ", "))
-  else
-    true()
+    if (empty($mtypes))
+    then
+      rest-impl:no-match($raise-errors, $rest-impl:UNACCEPTABLETYPE,
+                         string-join(for $type in $mtypes return concat("'",$type,"'"), ", "))
+    else
+      true()
 };
 
 declare function rest-impl:get-return-types(
@@ -532,7 +532,7 @@ as xs:string*
          return
            if (($atype eq "*/*")
                or (substring-after($atype, "/") eq "*"
-               and substring-before($rtype, "/") eq substring-before($atype, "/")))
+                   and substring-before($rtype, "/") eq substring-before($atype, "/")))
            then
              let $existing := map:get($match-map,$rtype)
              return
@@ -587,9 +587,9 @@ as xs:string*
 };
 
 declare function rest-impl:accept(
-    $request as element(rest:request),
-    $reqenv as map:map,
-    $accept-headers as xs:string*)
+  $request as element(rest:request),
+  $reqenv as map:map,
+  $accept-headers as xs:string*)
 as empty-sequence()
 {
   let $types := ($request/rest:accept, rest-impl:http($request,$reqenv)/rest:accept)/string()
@@ -944,16 +944,16 @@ declare function rest-impl:check-options(
 ) as element(rest:report)*
 {
   (
-    let $x := try { validate strict { $options } }
-              catch ($e) { <rest:report id="REST-SCHEMAINVALID">{$e/*:format-string, $e/*:data}</rest:report> }
-    return
-      if ($x/self::rest:report)
-      then $x
-      else ()
-    ,
-    for $req in $options/rest:request
-    return
-      rest-impl:check-request($req)
+   let $x := try { validate strict { $options } }
+             catch ($e) { <rest:report id="REST-SCHEMAINVALID">{$e/*:format-string, $e/*:data}</rest:report> }
+   return
+     if ($x/self::rest:report)
+     then $x
+     else ()
+   ,
+   for $req in $options/rest:request
+   return
+     rest-impl:check-request($req)
   )
 };
 
@@ -1015,13 +1015,13 @@ declare function rest-impl:check-request(
       where count($aliases[.=$alias]) > 1
       return
         <rest:report id="INVALID">
-         { concat("Duplicate alias in request: ", $alias) }
+          { concat("Duplicate alias in request: ", $alias) }
         </rest:report>,
       for $alias in $aliases
       where exists($request//rest:param[@name = $alias])
       return
         <rest:report id="INVALID">
-         { concat("Alias shadows named parameter: ", $alias) }
+          { concat("Alias shadows named parameter: ", $alias) }
         </rest:report>)
   )
 };
@@ -1035,11 +1035,11 @@ as element()
   (if ($error/error:code = "SEC-PRIV")
    then xdmp:set-response-code(401, "Unauthorized")
    else xdmp:set-response-code(400, "Bad Request"),
-  if (exists(xdmp:get-request-header("Accept")[contains(.,"text/html")]))
-  then
-    rest-impl:format-error-report($error)
-  else
-    $error)
+   if (exists(xdmp:get-request-header("Accept")[contains(.,"text/html")]))
+   then
+     rest-impl:format-error-report($error)
+   else
+     $error)
 };
 
 declare function rest-impl:format-error-report(
