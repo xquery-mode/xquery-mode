@@ -361,6 +361,8 @@ START and END are region boundaries."
                        ("\\<import\\>\\s-+\\<module\\>" . import-stmt)
                        ("(:" . comment-start-stmt)
                        (":)" . comment-end-stmt)
+                       ("<!--" . xml-comment-start-stmt)
+                       ("-->" . xml-comment-end-stmt)
                        ("{" . open-curly-bracket-stmt)
                        ("}" . close-curly-bracket-stmt)
                        ("\\[" . open-square-bracket-stmt)
@@ -398,7 +400,8 @@ START and END are region boundaries."
                        ("[[:alnum:]-_.:/@]+" . word-stmt)))
            (lookup-expression-fn (lambda (stream line-stream found-literal offset)
                                    (cl-case (caar (append line-stream stream))
-                                     ((where-stmt then-stmt else-stmt default-stmt open-square-bracket-stmt)
+                                     ((where-stmt then-stmt else-stmt default-stmt open-square-bracket-stmt
+                                       xml-comment-start-stmt)
                                       (list 'expression-start-stmt offset))
                                      (open-curly-bracket-stmt
                                       (list 'curly-expression-start-stmt offset)))))
@@ -430,6 +433,10 @@ START and END are region boundaries."
                                   expression-end-stmt let-stmt)
                                 '(comment-start-stmt
                                   expression-end-stmt comment-start-stmt)
+                                '(xml-comment-start-stmt
+                                  expression-end-stmt xml-comment-start-stmt)
+                                '(xml-comment-end-stmt
+                                  expression-end-stmt xml-comment-end-stmt)
                                 '(comma-stmt
                                   expression-end-stmt comma-stmt)))
            (on-close '((expression-start-stmt . expression-stmt)
@@ -462,6 +469,7 @@ START and END are region boundaries."
                        (catch-stmt try-stmt)
                        (semicolon-stmt namespace-stmt import-stmt assign-stmt)
                        (comment-end-stmt comment-start-stmt)
+                       (xml-comment-end-stmt xml-comment-start-stmt)
                        (expression-stmt return-stmt else-stmt assign-stmt catch-stmt catch-exception-stmt element-stmt element-arg-stmt default-stmt)
                        (element-end-stmt element-stmt)
                        (element-arg-end-stmt element-arg-stmt)
@@ -471,6 +479,8 @@ START and END are region boundaries."
            (implicit-statements '(expression-end-stmt curly-expression-end-stmt expression-stmt))
            (next-re-table '((comment-start-stmt . inside-comment)
                             (comment-end-stmt . generic)
+                            (xml-comment-start-stmt . inside-xml-comment)
+                            (xml-comment-end-stmt . generic)
                             (double-quote-stmt . inside-double-quoted-string)
                             (close-double-quote-stmt . generic)
                             (quote-stmt . inside-string)
@@ -479,13 +489,15 @@ START and END are region boundaries."
                              (mapcar #'cdr literals))
                        '(inside-comment
                          comment-end-stmt colon-stmt word-stmt)
+                       '(inside-xml-comment
+                         xml-comment-end-stmt word-stmt)
                        '(inside-double-quoted-string
                          escaped-double-quote-stmt close-double-quote-stmt word-stmt)
                        '(inside-string
                          escaped-quote-stmt close-quote-stmt word-stmt)))
            ;; TODO: don't calculate indent pairs.  Write it declarative way.
            ;; TODO: make variable below calculated only.
-           (non-pairs '(comment-end-stmt var-stmt word-stmt assign-stmt))
+           (non-pairs '(comment-end-stmt xml-comment-end-stmt var-stmt word-stmt assign-stmt))
            ;; TODO: This duplication makes me sad very often.
            (pairs '((close-curly-bracket-stmt open-curly-bracket-stmt)
                     (close-round-bracket-stmt open-round-bracket-stmt function-name-stmt)))
@@ -498,7 +510,8 @@ START and END are region boundaries."
                                     (let-stmt for-stmt)
                                     (order-by-stmt for-stmt)
                                     (case-stmt typeswitch-stmt)
-                                    (comment-start-stmt typeswitch-stmt))))
+                                    (comment-start-stmt typeswitch-stmt)
+                                    (xml-comment-start-stmt typeswitch-stmt))))
            (opening (apply #'append (mapcar #'cdr opposite)))
            (closing (mapcar #'car opposite))
            (re-table (mapcar (lambda (g)
@@ -546,6 +559,7 @@ START and END are region boundaries."
               (cl-destructuring-bind (previous-token previous-indent previous-offset)
                   (car stream)
                 (cond
+                 ;; TODO: Rewrite as nested expression start block.
                  ((and (eq previous-token 'comment-start-stmt)
                        (memq (caar line-stream) '(colon-stmt comment-end-stmt)))
                   (setq current-indent (+ previous-indent previous-offset 1)))
