@@ -534,7 +534,7 @@ START and END are region boundaries."
                          (<= (point) end))
                 (setq end (+ end (- current-indent (current-indentation))))
                 (indent-line-to current-indent))
-              (if (eq (line-end-position) (point-max))
+              (if (>= (line-end-position) end)
                   (setq exit t)
                 (while line-stream
                   (let ((token (pop line-stream)))
