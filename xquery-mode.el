@@ -408,9 +408,11 @@ START and END are region boundaries."
                                 '(close-curly-bracket-stmt
                                   expression-end-stmt close-curly-bracket-stmt)
                                 '(close-round-bracket-stmt
-                                  close-round-bracket-stmt element-arg-end-stmt element-end-stmt)
+                                  expression-end-stmt close-round-bracket-stmt element-arg-end-stmt element-end-stmt)
                                 '(else-stmt
-                                  expression-end-stmt else-stmt)))
+                                  expression-end-stmt else-stmt)
+                                '(let-stmt
+                                  expression-end-stmt let-stmt)))
            (on-close '((expression-start-stmt . expression-stmt)
                        (element-stmt . expression-stmt)
                        (open-curly-bracket-stmt . expression-stmt)
