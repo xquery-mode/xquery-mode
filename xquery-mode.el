@@ -363,6 +363,8 @@ START and END are region boundaries."
                        (":)" . comment-end-stmt)
                        ("{" . open-curly-bracket-stmt)
                        ("}" . close-curly-bracket-stmt)
+                       ("\\[" . open-square-bracket-stmt)
+                       ("\\]" . close-square-bracket-stmt)
                        ("(" . open-round-bracket-stmt)
                        (")" . close-round-bracket-stmt)
                        ("<[^>/ ]+?\\>[^>]*>" . open-xml-tag-stmt)
@@ -389,11 +391,11 @@ START and END are region boundaries."
                        ("\\<case\\>" . case-stmt)
                        ("\\<default\\>" . default-stmt)
                        ("\\<element\\>" . element-stmt)
-                       ("\\$\\(?:[[:alnum:]-_.:/]\\|\\[\\|\\]\\)+" . var-stmt)
-                       ("\\(?:[[:alnum:]-_.:/]\\|\\[\\|\\]\\)+" . word-stmt)))
+                       ("\\$[[:alnum:]-_.:/]+" . var-stmt)
+                       ("[[:alnum:]-_.:/]+" . word-stmt)))
            (lookup-expression-fn (lambda (stream line-stream found-literal offset)
                                    (cl-case (caar (append line-stream stream))
-                                     ((where-stmt then-stmt else-stmt)
+                                     ((where-stmt then-stmt else-stmt open-square-bracket-stmt)
                                       (list 'expression-start-stmt offset))
                                      (open-curly-bracket-stmt
                                       (list 'curly-expression-start-stmt offset)))))
@@ -409,6 +411,8 @@ START and END are region boundaries."
                                   expression-end-stmt return-stmt)
                                 '(close-curly-bracket-stmt
                                   curly-expression-end-stmt close-curly-bracket-stmt)
+                                '(close-square-bracket-stmt
+                                  expression-end-stmt close-square-bracket-stmt)
                                 '(close-round-bracket-stmt
                                   expression-end-stmt close-round-bracket-stmt element-arg-end-stmt element-end-stmt)
                                 '(else-stmt
@@ -434,6 +438,7 @@ START and END are region boundaries."
                        (return-stmt . expression-stmt)))
            ;; TODO: assign-stmt should be closed by strings and numbers.
            (opposite '((close-curly-bracket-stmt open-curly-bracket-stmt)
+                       (close-square-bracket-stmt open-square-bracket-stmt)
                        (close-round-bracket-stmt open-round-bracket-stmt function-name-stmt)
                        (close-xml-tag-stmt open-xml-tag-stmt)
                        (close-double-quote-stmt double-quote-stmt)
