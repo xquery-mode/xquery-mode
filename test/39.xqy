@@ -710,7 +710,7 @@ as xs:anyAtomicType
       else if ($type = "string") then $value cast as xs:string
       else
         (rest-impl:log(concat("Invalid type specified in validation: ", $type)),
-        error($rest-impl:INVALIDTYPE, $type))
+         error($rest-impl:INVALIDTYPE, $type))
 };
 
 (: ====================================================================== :)
