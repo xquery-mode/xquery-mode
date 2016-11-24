@@ -361,6 +361,8 @@ START and END are region boundaries."
                        ("\\<import\\>\\s-+\\<module\\>" . import-stmt)
                        ("(:" . comment-start-stmt)
                        (":)" . comment-end-stmt)
+                       ("<!\\[CDATA\\[" . cdata-start-stmt)
+                       ("\\]\\]>" . cdata-end-stmt)
                        ("<!--" . xml-comment-start-stmt)
                        ("-->" . xml-comment-end-stmt)
                        ("{" . open-curly-bracket-stmt)
@@ -438,6 +440,8 @@ START and END are region boundaries."
                                   expression-end-stmt xml-comment-start-stmt)
                                 '(xml-comment-end-stmt
                                   expression-end-stmt xml-comment-end-stmt)
+                                '(cdata-start-stmt
+                                  expression-end-stmt cdata-start-stmt)
                                 '(comma-stmt
                                   expression-end-stmt comma-stmt)))
            (on-close '((expression-start-stmt . expression-stmt)
@@ -471,6 +475,7 @@ START and END are region boundaries."
                        (semicolon-stmt namespace-stmt import-stmt assign-stmt)
                        (comment-end-stmt comment-start-stmt)
                        (xml-comment-end-stmt xml-comment-start-stmt)
+                       (cdata-end-stmt cdata-start-stmt)
                        (expression-stmt return-stmt else-stmt assign-stmt catch-stmt catch-exception-stmt element-stmt element-arg-stmt default-stmt)
                        (element-end-stmt element-stmt)
                        (element-arg-end-stmt element-arg-stmt)
@@ -482,6 +487,8 @@ START and END are region boundaries."
                             (comment-end-stmt . generic)
                             (xml-comment-start-stmt . inside-xml-comment)
                             (xml-comment-end-stmt . generic)
+                            (cdata-start-stmt . inside-cdata)
+                            (cdata-end-stmt . generic)
                             (double-quote-stmt . inside-double-quoted-string)
                             (close-double-quote-stmt . generic)
                             (quote-stmt . inside-string)
@@ -492,13 +499,15 @@ START and END are region boundaries."
                          comment-end-stmt colon-stmt word-stmt)
                        '(inside-xml-comment
                          xml-comment-end-stmt word-stmt)
+                       '(inside-cdata
+                         cdata-end-stmt)
                        '(inside-double-quoted-string
                          escaped-double-quote-stmt close-double-quote-stmt word-stmt)
                        '(inside-string
                          escaped-quote-stmt close-quote-stmt word-stmt)))
            ;; TODO: don't calculate indent pairs.  Write it declarative way.
            ;; TODO: make variable below calculated only.
-           (non-pairs '(comment-end-stmt xml-comment-end-stmt var-stmt word-stmt assign-stmt))
+           (non-pairs '(comment-end-stmt xml-comment-end-stmt cdata-end-stmt var-stmt word-stmt assign-stmt))
            ;; TODO: This duplication makes me sad very often.
            (pairs '((close-curly-bracket-stmt open-curly-bracket-stmt)
                     (close-round-bracket-stmt open-round-bracket-stmt function-name-stmt)))
@@ -587,6 +596,8 @@ START and END are region boundaries."
                   (setq current-indent (+ previous-indent previous-offset xquery-mode-indent-width)))
                  ((memq previous-token '(expression-start-stmt curly-expression-start-stmt))
                   (setq current-indent (+ previous-indent previous-offset)))
+                 ((eq previous-token 'cdata-start-stmt)
+                  (setq current-indent (current-indentation)))
                  ((eq previous-token 'buffer-beginning)
                   (setq current-indent previous-indent))))
               (when (and (<= start (point))

@@ -41,7 +41,7 @@
   return
     <tr>" (buffer-substring-no-properties (point-min) (point-max))))))
 
-(ert-deftest test-xquery-mode-indent-line ()
+(ert-deftest test-xquery-mode-indent-line-part ()
   "Indent current line."
   (with-current-buffer (generate-new-buffer "*fixture-buffer-part*")
     (insert "
@@ -56,6 +56,23 @@
   return
     <tr>
 <td>" (buffer-substring-no-properties (point-min) (point-max))))))
+
+(ert-deftest test-xquery-mode-indent-cdata ()
+  "Don't touch CDATA content in any way."
+  (with-current-buffer (generate-new-buffer "*fixture-cdata*")
+    (insert "<a><![CDATA[Hello  World
+
+a       b
+        a d]]></a>
+")
+    (goto-char (point-min))
+    (xquery-mode)
+    (indent-region (point-min) (point-max))
+    (should (string= "<a><![CDATA[Hello  World
+
+a       b
+        a d]]></a>
+" (buffer-substring-no-properties (point-min) (point-max))))))
 
 (provide 'xquery-mode-test)
 
