@@ -433,11 +433,10 @@ START and END are region boundaries."
                        (default-stmt typeswitch-stmt)
                        (semicolon-stmt declare-variable-stmt namespace-stmt import-stmt assign-stmt)
                        (comment-end-stmt comment-start-stmt)
-                       (expression-stmt return-stmt else-stmt assign-stmt double-quote-stmt quote-stmt function-call-stmt element-stmt element-arg-stmt)
+                       (expression-stmt return-stmt else-stmt assign-stmt double-quote-stmt quote-stmt element-stmt element-arg-stmt)
                        (element-end-stmt element-stmt)
                        (element-arg-end-stmt element-arg-stmt)
                        (expression-end-stmt expression-start-stmt)
-                       (function-call-stmt return-stmt else-stmt assign-stmt)
                        (var-stmt assign-stmt)))
            (implicit-statements '(expression-end-stmt expression-stmt))
            (next-re-table '((comment-start-stmt . inside-comment)
@@ -473,7 +472,7 @@ START and END are region boundaries."
                                                       literals)
                                                      "\\|")))
                                  (list name re groups group-lookup)))
-                             grid))  ;; TODO: skip inside strings too.
+                             grid))
            (current-indent 0)
            (re (cadr (assoc 'generic re-table)))
            (groups (cl-caddr (assoc 'generic re-table)))
@@ -541,11 +540,6 @@ START and END are region boundaries."
                   (let ((token (pop line-stream)))
                     (cl-destructuring-bind (current-token current-offset)
                         token
-                      ;; TODO: move to the substitutions.  Maybe
-                      ;; remove function call at all.
-                      (when (and (eq current-token 'word-stmt)
-                                 (eq (caar line-stream ) 'open-round-bracket-stmt))
-                        (push '(function-call-stmt current-offset) line-stream))
                       (when (and (memq current-token closing)
                                  (memq (caar stream)
                                        (cdr (assoc current-token opposite))))
