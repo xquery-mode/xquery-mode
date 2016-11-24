@@ -380,6 +380,7 @@ START and END are region boundaries."
                        (":=" . assign-stmt)
                        (";" . semicolon-stmt)
                        (":" . colon-stmt)
+                       ("," . comma-stmt)
                        ("\\<if\\>" . if-stmt)
                        ("\\<then\\>" . then-stmt)
                        ("\\<else\\>" . else-stmt)
@@ -412,7 +413,11 @@ START and END are region boundaries."
                                 '(else-stmt
                                   expression-end-stmt else-stmt)
                                 '(let-stmt
-                                  expression-end-stmt let-stmt)))
+                                  expression-end-stmt let-stmt)
+                                '(comment-start-stmt
+                                  expression-end-stmt comment-start-stmt)
+                                '(comma-stmt
+                                  expression-end-stmt comma-stmt)))
            (on-close '((expression-start-stmt . expression-stmt)
                        (element-stmt . expression-stmt)
                        (open-curly-bracket-stmt . expression-stmt)
