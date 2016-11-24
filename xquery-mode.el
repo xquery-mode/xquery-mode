@@ -556,7 +556,6 @@ START and END are region boundaries."
                   (let ((token (pop line-stream)))
                     (cl-destructuring-bind (current-token current-offset)
                         token
-                      (move-to-column (+ (current-indentation) current-offset))
                       (when (and (memq current-token closing)
                                  (memq (caar stream)
                                        (cdr (assoc current-token opposite))))
