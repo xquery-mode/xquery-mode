@@ -393,9 +393,11 @@ START and END are region boundaries."
                        ("\\$\\(?:[[:alnum:]-_.:/]\\|\\[\\|\\]\\)+" . var-stmt)
                        ("\\(?:[[:alnum:]-_.:/]\\|\\[\\|\\]\\)+" . word-stmt)))
            (lookup-expression-fn (lambda (stream line-stream found-literal offset)
-                                   (when (memq (caar (append line-stream stream))
-                                               '(where-stmt open-curly-bracket-stmt then-stmt else-stmt))
-                                     (list 'expression-start-stmt offset))))
+                                   (cl-case (caar (append line-stream stream))
+                                     ((where-stmt then-stmt else-stmt)
+                                      (list 'expression-start-stmt offset))
+                                     (open-curly-bracket-stmt
+                                      (list 'curly-expression-start-stmt offset)))))
            (substitutions (list (list 'var-stmt
                                       lookup-expression-fn 'var-stmt)
                                 (list 'word-stmt
@@ -407,7 +409,7 @@ START and END are region boundaries."
                                 '(return-stmt
                                   expression-end-stmt return-stmt)
                                 '(close-curly-bracket-stmt
-                                  expression-end-stmt close-curly-bracket-stmt)
+                                  curly-expression-end-stmt close-curly-bracket-stmt)
                                 '(close-round-bracket-stmt
                                   expression-end-stmt close-round-bracket-stmt element-arg-end-stmt element-end-stmt)
                                 '(else-stmt
@@ -419,6 +421,7 @@ START and END are region boundaries."
                                 '(comma-stmt
                                   expression-end-stmt comma-stmt)))
            (on-close '((expression-start-stmt . expression-stmt)
+                       (curly-expression-start-stmt . expression-stmt)
                        (element-stmt . expression-stmt)
                        (open-curly-bracket-stmt . expression-stmt)
                        (open-round-bracket-stmt . expression-stmt)
@@ -448,8 +451,9 @@ START and END are region boundaries."
                        (element-end-stmt element-stmt)
                        (element-arg-end-stmt element-arg-stmt)
                        (expression-end-stmt expression-start-stmt)
+                       (curly-expression-end-stmt curly-expression-start-stmt expression-start-stmt)
                        (var-stmt assign-stmt return-stmt)))
-           (implicit-statements '(expression-end-stmt expression-stmt))
+           (implicit-statements '(expression-end-stmt curly-expression-end-stmt expression-stmt))
            (next-re-table '((comment-start-stmt . inside-comment)
                             (comment-end-stmt . generic)
                             (double-quote-stmt . inside-double-quoted-string)
@@ -549,7 +553,7 @@ START and END are region boundaries."
                                          namespace-stmt import-stmt
                                          function-name-stmt typeswitch-stmt))
                   (setq current-indent (+ previous-indent previous-offset xquery-mode-indent-width)))
-                 ((eq previous-token 'expression-start-stmt)
+                 ((memq previous-token '(expression-start-stmt curly-expression-start-stmt))
                   (setq current-indent (+ previous-indent previous-offset)))
                  ((eq previous-token 'buffer-beginning)
                   (setq current-indent previous-indent))))
