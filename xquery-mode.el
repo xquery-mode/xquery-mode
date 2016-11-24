@@ -429,11 +429,11 @@ START and END are region boundaries."
                        (close-xml-tag-stmt open-xml-tag-stmt)
                        (close-double-quote-stmt double-quote-stmt)
                        (close-quote-stmt quote-stmt)
-                       (assign-stmt let-stmt)
+                       (assign-stmt let-stmt declare-variable-stmt)
                        (return-stmt where-stmt for-stmt)
                        (else-stmt if-stmt)
                        (default-stmt typeswitch-stmt)
-                       (semicolon-stmt declare-variable-stmt namespace-stmt import-stmt assign-stmt)
+                       (semicolon-stmt namespace-stmt import-stmt assign-stmt)
                        (comment-end-stmt comment-start-stmt)
                        (expression-stmt return-stmt else-stmt assign-stmt element-stmt element-arg-stmt)
                        (element-end-stmt element-stmt)
@@ -455,8 +455,9 @@ START and END are region boundaries."
                          escaped-double-quote-stmt close-double-quote-stmt word-stmt)
                        '(inside-string
                          escaped-quote-stmt close-quote-stmt word-stmt)))
+           ;; TODO: don't calculate indent pairs.  Write it declarative way.
            ;; TODO: make variable below calculated only.
-           (non-pairs '(comment-end-stmt var-stmt word-stmt))
+           (non-pairs '(comment-end-stmt var-stmt word-stmt assign-stmt))
            ;; TODO: This duplication makes me sad very often.
            (pairs '((close-curly-bracket-stmt open-curly-bracket-stmt)
                     (close-round-bracket-stmt open-round-bracket-stmt function-name-stmt)))
