@@ -417,8 +417,8 @@ START and END are region boundaries."
                        (open-round-bracket-stmt . expression-stmt)
                        (open-xml-tag-stmt . expression-stmt)
                        (else-stmt . expression-stmt)
-                       (close-double-quote-stmt . expression-stmt)
-                       (close-quote-stmt . expression-stmt)
+                       (double-quote-stmt . expression-stmt)
+                       (quote-stmt . expression-stmt)
                        (typeswitch-stmt . expression-stmt)
                        ;; TODO: surround expr-start for return expr-end
                        ;; TODO: surround expr-start if then else expr-end
@@ -553,6 +553,7 @@ START and END are region boundaries."
                   (let ((token (pop line-stream)))
                     (cl-destructuring-bind (current-token current-offset)
                         token
+                      (move-to-column (+ (current-indentation) current-offset))
                       (when (and (memq current-token closing)
                                  (memq (caar stream)
                                        (cdr (assoc current-token opposite))))
