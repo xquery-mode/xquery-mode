@@ -401,17 +401,20 @@ START and END are region boundaries."
                        ("\\<element\\>" . element-stmt)
                        ("\\$[[:alnum:]-_.:/@]+" . var-stmt)
                        ("[[:alnum:]-_.:/@]+" . word-stmt)))
-           (lookup-expression-fn (lambda (stream line-stream found-literal offset)
-                                   (cl-case (caar (append line-stream stream))
-                                     ((where-stmt then-stmt else-stmt default-stmt open-square-bracket-stmt
-                                       xml-comment-start-stmt)
-                                      (list 'expression-start-stmt offset))
-                                     (open-curly-bracket-stmt
-                                      (list 'curly-expression-start-stmt offset)))))
+           (expression-lookup-fn (lambda (stream line-stream found-literal offset)
+                                   (when (memq (caar (append line-stream stream))
+                                               '(where-stmt
+                                                 then-stmt else-stmt default-stmt
+                                                 open-square-bracket-stmt xml-comment-start-stmt))
+                                     (list 'expression-start-stmt offset))))
+           (curly-expression-lookup-fn (lambda (stream line-stream found-literal offset)
+                                         (when (eq (caar (append line-stream stream))
+                                                   'open-curly-bracket-stmt)
+                                           (list 'curly-expression-start-stmt offset))))
            (substitutions (list (list 'var-stmt
-                                      lookup-expression-fn 'var-stmt)
+                                      expression-lookup-fn curly-expression-lookup-fn 'var-stmt)
                                 (list 'word-stmt
-                                      lookup-expression-fn 'word-stmt 'element-arg-end-stmt)
+                                      expression-lookup-fn curly-expression-lookup-fn 'word-stmt 'element-arg-end-stmt)
                                 '(element-stmt
                                   element-stmt element-arg-stmt)
                                 '(catch-stmt
@@ -434,10 +437,10 @@ START and END are region boundaries."
                                   expression-end-stmt default-stmt)
                                 '(let-stmt
                                   expression-end-stmt let-stmt)
-                                '(comment-start-stmt
-                                  expression-end-stmt comment-start-stmt)
-                                '(xml-comment-start-stmt
-                                  expression-end-stmt xml-comment-start-stmt)
+                                (list 'comment-start-stmt
+                                      curly-expression-lookup-fn 'expression-end-stmt 'comment-start-stmt)
+                                (list 'xml-comment-start-stmt
+                                      curly-expression-lookup-fn 'expression-end-stmt 'xml-comment-start-stmt)
                                 '(xml-comment-end-stmt
                                   expression-end-stmt xml-comment-end-stmt)
                                 '(cdata-start-stmt
