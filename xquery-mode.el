@@ -482,6 +482,7 @@ START and END are region boundaries."
                        (where-stmt for-stmt)
                        (order-by-stmt where-stmt for-stmt)
                        (else-stmt if-stmt)
+                       (if-stmt else-stmt)
                        (default-stmt typeswitch-stmt switch-stmt)
                        (catch-stmt try-stmt)
                        (semicolon-stmt namespace-stmt import-stmt assign-stmt)
