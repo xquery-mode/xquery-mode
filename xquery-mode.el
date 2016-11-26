@@ -395,6 +395,7 @@ START and END are region boundaries."
                        ("\\<where\\>" . where-stmt)
                        ("\\<return\\>" . return-stmt)
                        ("\\<typeswitch\\>" . typeswitch-stmt)
+                       ("\\<switch\\>" . switch-stmt)
                        ("\\<case\\>" . case-stmt)
                        ("\\<default\\>" . default-stmt)
                        ("\\<try\\>" . try-stmt)
@@ -482,7 +483,7 @@ START and END are region boundaries."
                        (for-stmt for-stmt)
                        (where-stmt for-stmt)
                        (else-stmt if-stmt)
-                       (default-stmt typeswitch-stmt)
+                       (default-stmt typeswitch-stmt switch-stmt)
                        (catch-stmt try-stmt)
                        (semicolon-stmt namespace-stmt import-stmt assign-stmt)
                        (comment-end-stmt comment-start-stmt)
@@ -536,9 +537,9 @@ START and END are region boundaries."
                                     (else-if-stmt if-stmt)
                                     (let-stmt for-stmt)
                                     (order-by-stmt for-stmt)
-                                    (case-stmt typeswitch-stmt)
-                                    (comment-start-stmt typeswitch-stmt)
-                                    (xml-comment-start-stmt typeswitch-stmt))))
+                                    (case-stmt typeswitch-stmt switch-stmt)
+                                    (comment-start-stmt typeswitch-stmt switch-stmt)
+                                    (xml-comment-start-stmt typeswitch-stmt switch-stmt))))
            (opening (apply #'append (mapcar #'cdr opposite)))
            (closing (mapcar #'car opposite))
            (re-table (mapcar (lambda (g)
@@ -608,7 +609,7 @@ START and END are region boundaries."
                                          return-stmt if-stmt else-stmt where-stmt let-stmt
                                          namespace-stmt import-stmt
                                          function-name-stmt declare-variable-stmt
-                                         typeswitch-stmt default-stmt
+                                         typeswitch-stmt switch-stmt default-stmt
                                          try-stmt catch-stmt))
                   (setq current-indent (+ previous-indent previous-offset xquery-mode-indent-width)))
                  ((memq previous-token '(expression-start-stmt curly-expression-start-stmt))
