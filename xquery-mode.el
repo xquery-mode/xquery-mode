@@ -374,8 +374,6 @@ START and END are region boundaries."
                        ("<[^>/ ]+?\\>[^>]*/>" . self-closing-xml-tag-stmt)
                        ("<[^>/ ]+?\\>[^>]*>" . open-xml-tag-stmt)
                        ("</[^>]+>" . close-xml-tag-stmt)
-                       ("\\\\\"" . escaped-double-quote-stmt)
-                       ("\\\\'" . escaped-quote-stmt)
                        ("\"" . double-quote-stmt)
                        ("'" . quote-stmt)
                        ("\"" . close-double-quote-stmt) ;; Don't ask...
@@ -517,9 +515,9 @@ START and END are region boundaries."
                        '(inside-cdata
                          cdata-end-stmt)
                        '(inside-double-quoted-string
-                         escaped-double-quote-stmt close-double-quote-stmt word-stmt)
+                         close-double-quote-stmt word-stmt)
                        '(inside-string
-                         escaped-quote-stmt close-quote-stmt word-stmt)))
+                         close-quote-stmt word-stmt)))
            ;; TODO: don't calculate indent pairs.  Write it declarative way.
            ;; TODO: make variable below calculated only.
            (non-pairs '(cdata-end-stmt
