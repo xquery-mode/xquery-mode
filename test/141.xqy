@@ -31,7 +31,7 @@ try {
 }
 
 catch($e)
-{
-  (xdmp:log(xdmp:quote($e)),
-  ())
-}
+  {
+    (xdmp:log(xdmp:quote($e)),
+    ())
+  }
