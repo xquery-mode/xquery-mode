@@ -432,7 +432,7 @@ START and END are region boundaries."
                                 '(return-stmt
                                   expression-end-stmt return-stmt)
                                 '(close-curly-bracket-stmt
-                                  curly-expression-end-stmt close-curly-bracket-stmt)
+                                  expression-end-stmt curly-expression-end-stmt close-curly-bracket-stmt)
                                 '(close-square-bracket-stmt
                                   expression-end-stmt close-square-bracket-stmt)
                                 '(close-round-bracket-stmt
