@@ -454,7 +454,9 @@ START and END are region boundaries."
                                 '(cdata-start-stmt
                                   expression-end-stmt cdata-start-stmt)
                                 '(comma-stmt
-                                  expression-end-stmt comma-stmt)))
+                                  expression-end-stmt comma-stmt)
+                                '(self-closing-xml-tag-stmt
+                                  self-closing-xml-tag-stmt expression-stmt)))
            (on-close '((expression-start-stmt . expression-stmt)
                        (curly-expression-start-stmt . expression-stmt)
                        (element-stmt . expression-stmt)
