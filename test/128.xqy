@@ -87,26 +87,26 @@ as empty-sequence()
   (: create transactions by breaking document set into maps
      each maps's documents are saved to the db in their own transaction :)
   let $transactions :=
-      for $i at $index in 1 to $total-transactions
-      let $map := map:map()
-      let $start :=  (($i -1) *$transaction-size) + 1
-      let $finish := min((($start  - 1 + $transaction-size),$entry-count))
-      let $put :=
-          for $entry in ($entries)[$start to $finish]
-          let $id := fn:concat(fn:string($entry/atom:id),".xml")
-          return map:put($map,$id,$entry)
-      return $map
+    for $i at $index in 1 to $total-transactions
+    let $map := map:map()
+    let $start :=  (($i -1) *$transaction-size) + 1
+    let $finish := min((($start  - 1 + $transaction-size),$entry-count))
+    let $put :=
+      for $entry in ($entries)[$start to $finish]
+      let $id := fn:concat(fn:string($entry/atom:id),".xml")
+      return map:put($map,$id,$entry)
+    return $map
 
   (: the callback function for ingest :)
   let $function := xdmp:function(xs:QName("feed:process-file"))
   let $ingestion :=
-      for $transaction at $index in $transactions
-      return
-         try {
-             infodev:transaction($transaction,$ticket-id,$function,$policy-deltas,$index,(),())
-         } catch($e) {
-             infodev:handle-error($ticket-id, concat("transaction ",$index), $e)
-         }
+    for $transaction at $index in $transactions
+    return
+      try {
+        infodev:transaction($transaction,$ticket-id,$function,$policy-deltas,$index,(),())
+      } catch($e) {
+        infodev:handle-error($ticket-id, concat("transaction ",$index), $e)
+      }
   (:set ticket completed for UI:)
   let $_ := infodev:ticket-set-status($ticket-id, "completed")
   return ()
@@ -182,24 +182,24 @@ declare function feed:string($key as xs:string, $model as element(plugin:plugin-
 as xs:string?
 {
   let $labels :=
-  <lbl:labels xmlns:lbl="http://marklogic.com/xqutils/labels">
-    <lbl:label key="name">
-      <lbl:value xml:lang="en">Feed Collector</lbl:value>
-    </lbl:label>
-    <lbl:label key="description">
-      <lbl:value xml:lang="en">{
-        if($model)
-        then concat("Load from this feed: ", $model/plugin:data/uri/string())
-        else "Load files from an atom feed"
-      }</lbl:value>
-    </lbl:label>
-    <lbl:label key="start-label">
-      <lbl:value xml:lang="en">Run</lbl:value>
-    </lbl:label>
-    <lbl:label key="dir-label">
-      <lbl:value xml:lang="en">Feed URI</lbl:value>
-    </lbl:label>
-  </lbl:labels>
+    <lbl:labels xmlns:lbl="http://marklogic.com/xqutils/labels">
+      <lbl:label key="name">
+        <lbl:value xml:lang="en">Feed Collector</lbl:value>
+      </lbl:label>
+      <lbl:label key="description">
+        <lbl:value xml:lang="en">{
+          if($model)
+          then concat("Load from this feed: ", $model/plugin:data/uri/string())
+          else "Load files from an atom feed"
+        }</lbl:value>
+      </lbl:label>
+      <lbl:label key="start-label">
+        <lbl:value xml:lang="en">Run</lbl:value>
+      </lbl:label>
+      <lbl:label key="dir-label">
+        <lbl:value xml:lang="en">Feed URI</lbl:value>
+      </lbl:label>
+    </lbl:labels>
   return $labels/lbl:label[@key eq $key]/lbl:value[@xml:lang eq $lang]/string()
 
 };
