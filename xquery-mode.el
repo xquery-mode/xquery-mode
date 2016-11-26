@@ -421,6 +421,8 @@ START and END are region boundaries."
                                   catch-stmt catch-exception-stmt)
                                 '(where-stmt
                                   expression-end-stmt where-stmt)
+                                '(order-by-stmt
+                                  expression-end-stmt order-by-stmt)
                                 '(return-stmt
                                   expression-end-stmt return-stmt)
                                 '(close-curly-bracket-stmt
