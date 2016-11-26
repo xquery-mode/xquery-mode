@@ -81,55 +81,55 @@ as xs:string*
   let $delimiter := $context/plugin:data/delimiter/string()
 
   let $result :=
-      if(fn:ends-with($mimetype,"/csv"))
-      then
-        try {
-          let $csv-name := fn:concat(fn:substring-before($source-location,".csv"),".xml")
-          let $lines :=  fn:tokenize($document,"[\n\r]+")
-          let $line := $lines[1]
-          let $header-elements := if($use-headers) then
-                                    let $headers := fn:tokenize($line, $delimiter)
-                                    let $header-elems := for $h in $headers
-                                                         let $upd := fn:replace($h," ","_")
-                                                         return if(fn:matches($upd,"^([a-zA-Z]+[_0-9-]*)+[a-zA-Z0-9]+$")) then
-                                                                  element{fn:QName((),$upd)} {$upd}
-                                                                else
-                                                                  fn:error(xs:QName("ERROR"), "Value Cannot Be Used As Element Name. Please Reconfigure to Use Defaults.")
-                                    return $header-elems
-                                  else
-                                    ()
+    if(fn:ends-with($mimetype,"/csv"))
+    then
+      try {
+        let $csv-name := fn:concat(fn:substring-before($source-location,".csv"),".xml")
+        let $lines :=  fn:tokenize($document,"[\n\r]+")
+        let $line := $lines[1]
+        let $header-elements := if($use-headers) then
+                                  let $headers := fn:tokenize($line, $delimiter)
+                                  let $header-elems := for $h in $headers
+                                                       let $upd := fn:replace($h," ","_")
+                                                       return if(fn:matches($upd,"^([a-zA-Z]+[_0-9-]*)+[a-zA-Z0-9]+$")) then
+                                                                element{fn:QName((),$upd)} {$upd}
+                                                              else
+                                                                fn:error(xs:QName("ERROR"), "Value Cannot Be Used As Element Name. Please Reconfigure to Use Defaults.")
+                                  return $header-elems
+                                else
+                                  ()
 
-          let $csv:=  <csv>{
-            if(fn:empty($header-elements)) then
-              for $line in $lines[1 to fn:count($lines)-1]
-              return <row>{
-                let $l := fn:tokenize($line,$delimiter)
-                return for $ln at $idx in $l
-                       return element {fn:concat("column",$idx)} {$ln}
-              }</row>
-            else
-              for $l in $lines[2 to fn:count($lines)-1]
-              let $line-vals := fn:tokenize($l, $delimiter)
-              return <row>{
-                for $lv at $d in $line-vals
-                return element {fn:name($header-elements[$d])} {$lv}
-              }</row>
-          }</csv>
+        let $csv:=  <csv>{
+          if(fn:empty($header-elements)) then
+            for $line in $lines[1 to fn:count($lines)-1]
+            return <row>{
+              let $l := fn:tokenize($line,$delimiter)
+              return for $ln at $idx in $l
+                     return element {fn:concat("column",$idx)} {$ln}
+            }</row>
+          else
+            for $l in $lines[2 to fn:count($lines)-1]
+            let $line-vals := fn:tokenize($l, $delimiter)
+            return <row>{
+              for $lv at $d in $line-vals
+              return element {fn:name($header-elements[$d])} {$lv}
+            }</row>
+        }</csv>
 
-          return infodev:ingest($csv, $csv-name,$ticket-id,$policy-deltas)
+        return infodev:ingest($csv, $csv-name,$ticket-id,$policy-deltas)
 
-        } catch($e) {
-          (infodev:handle-error($ticket-id, $source-location, $e), xdmp:log(fn:concat("ERROR",$e)))
-        }
-      else
-        let $current-total := if(fn:empty(xs:integer(info:ticket($ticket-id)/info:total-documents))) then
-                                 0
-                              else
-                                 xs:integer(info:ticket($ticket-id)/info:total-documents)
+      } catch($e) {
+        (infodev:handle-error($ticket-id, $source-location, $e), xdmp:log(fn:concat("ERROR",$e)))
+      }
+    else
+      let $current-total := if(fn:empty(xs:integer(info:ticket($ticket-id)/info:total-documents))) then
+                              0
+                            else
+                              xs:integer(info:ticket($ticket-id)/info:total-documents)
 
-        let $total-count := $current-total - 1
-        let $set-total := infodev:ticket-set-total-documents($ticket-id, $total-count)
-        return  ()
+      let $total-count := $current-total - 1
+      let $set-total := infodev:ticket-set-total-documents($ticket-id, $total-count)
+      return  ()
   return $result
 
 };
