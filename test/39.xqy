@@ -446,7 +446,7 @@ as xs:boolean
                                       if (empty($legal-values))
                                       then $as
                                       else concat("(", $legal-values, ")")))
-    )
+       )
   return
     empty($errors)
 };
