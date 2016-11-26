@@ -496,16 +496,24 @@ START and END are region boundaries."
                        (curly-expression-end-stmt curly-expression-start-stmt expression-start-stmt)
                        (var-stmt assign-stmt return-stmt)))
            (implicit-statements '(expression-end-stmt curly-expression-end-stmt expression-stmt))
-           (next-re-table '((comment-start-stmt . inside-comment)
-                            (comment-end-stmt . generic)
-                            (xml-comment-start-stmt . inside-xml-comment)
-                            (xml-comment-end-stmt . generic)
-                            (cdata-start-stmt . inside-cdata)
-                            (cdata-end-stmt . generic)
-                            (double-quote-stmt . inside-double-quoted-string)
-                            (close-double-quote-stmt . generic)
-                            (quote-stmt . inside-string)
-                            (close-quote-stmt . generic)))
+           ;; TODO: No seriously, I should start to use ` and , lisp features.
+           (next-re-table (list '(comment-start-stmt . inside-comment)
+                                '(comment-end-stmt . generic)
+                                '(xml-comment-start-stmt . inside-xml-comment)
+                                '(xml-comment-end-stmt . generic)
+                                '(cdata-start-stmt . inside-cdata)
+                                '(cdata-end-stmt . generic)
+                                '(double-quote-stmt . inside-double-quoted-string)
+                                '(close-double-quote-stmt . generic)
+                                '(quote-stmt . inside-string)
+                                '(close-quote-stmt . generic)
+                                '(open-xml-tag-stmt . inside-xml-tag)
+                                '(close-xml-tag-stmt . generic)
+                                '(open-curly-bracket-stmt . generic)
+                                (cons 'close-curly-bracket-stmt (lambda (stream line-stream found-literal offset)
+                                                                  (if (eq (caar (append line-stream stream)) 'open-xml-tag-stmt)
+                                                                      'inside-xml-tag
+                                                                    'generic)))))
            (grid (list (cons 'generic
                              (mapcar #'cdr literals))
                        '(inside-comment
@@ -517,7 +525,9 @@ START and END are region boundaries."
                        '(inside-double-quoted-string
                          close-double-quote-stmt word-stmt)
                        '(inside-string
-                         close-quote-stmt word-stmt)))
+                         close-quote-stmt word-stmt)
+                       '(inside-xml-tag
+                         cdata-start-stmt open-curly-bracket-stmt self-closing-xml-tag-stmt open-xml-tag-stmt close-xml-tag-stmt)))
            ;; TODO: don't calculate indent pairs.  Write it declarative way.
            ;; TODO: make variable below calculated only.
            (non-pairs '(cdata-end-stmt
@@ -654,6 +664,8 @@ START and END are region boundaries."
                 (push (list found-literal offset) line-stream)))
             (let ((next-re-key (cdr (assoc found-literal next-re-table))))
               (when next-re-key
+                (when (functionp next-re-key)
+                  (setq next-re-key (apply next-re-key stream line-stream found-literal offset nil)))
                 (cl-destructuring-bind (next-re-re next-re-groups next-re-lookups)
                     (cdr (assoc next-re-key re-table))
                   (setq re next-re-re
