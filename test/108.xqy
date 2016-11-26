@@ -174,10 +174,10 @@ declare function run-module-tests(
     order by $name
     return $f
   return (
-    map:get(apply($fns[has-test-annotation(., "setup")], $path), "results"),
-    run-test($fns[has-test-annotation(., "case") or has-test-annotation(., "ignore")], $path),
-    map:get(apply($fns[has-test-annotation(., "teardown")], $path), "results")
-  )
+          map:get(apply($fns[has-test-annotation(., "setup")], $path), "results"),
+          run-test($fns[has-test-annotation(., "case") or has-test-annotation(., "ignore")], $path),
+          map:get(apply($fns[has-test-annotation(., "teardown")], $path), "results")
+         )
 };
 
 declare function has-test-annotation(
