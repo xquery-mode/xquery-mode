@@ -399,8 +399,8 @@ START and END are region boundaries."
                        ("\\<try\\>" . try-stmt)
                        ("\\<catch\\>" . catch-stmt)
                        ("\\<element\\>" . element-stmt)
-                       ("\\$[[:alnum:]-_.:/@]+" . var-stmt)
-                       ("[[:alnum:]-_.:/@]+" . word-stmt)))
+                       ("\\$[[:alnum:]-_./@]+" . var-stmt)
+                       ("[[:alnum:]-_./@]+" . word-stmt)))
            (expression-lookup-fn (lambda (stream line-stream found-literal offset)
                                    (when (memq (caar (append line-stream stream))
                                                '(assign-stmt where-stmt
