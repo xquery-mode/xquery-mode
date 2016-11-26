@@ -38,9 +38,9 @@ declare private function filesystem-directory-exists(
 {
   try  { fn:exists(xdmp:filesystem-directory($dir)) }
   catch($e)
-  {
-    if ($e/error:code = "SVC-DIROPEN")
-    then fn:false()
-    else xdmp:rethrow()
-  }
+    {
+      if ($e/error:code = "SVC-DIROPEN")
+      then fn:false()
+      else xdmp:rethrow()
+    }
 };
