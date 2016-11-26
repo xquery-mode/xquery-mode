@@ -510,12 +510,13 @@ START and END are region boundaries."
            (non-pairs '(comment-end-stmt xml-comment-end-stmt cdata-end-stmt var-stmt word-stmt assign-stmt))
            ;; TODO: This duplication makes me sad very often.
            (pairs '((close-curly-bracket-stmt open-curly-bracket-stmt)
-                    (close-round-bracket-stmt open-round-bracket-stmt function-name-stmt)))
+                    (close-round-bracket-stmt function-name-stmt)))
            ;; TODO: that's not good at all.
            (aligned-pairs (append (cl-remove-if (lambda (x) (member x (append non-pairs (mapcar #'car pairs))))
                                                 opposite
                                                 :key #'car)
-                                  '((then-stmt if-stmt)
+                                  '((close-round-bracket-stmt open-round-bracket-stmt)
+                                    (then-stmt if-stmt)
                                     (else-if-stmt if-stmt)
                                     (let-stmt for-stmt)
                                     (order-by-stmt for-stmt)
