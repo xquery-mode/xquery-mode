@@ -421,6 +421,10 @@ START and END are region boundaries."
                                   catch-stmt catch-exception-stmt)
                                 '(function-name-stmt
                                   expression-end-stmt function-name-stmt)
+                                '(declare-variable-stmt
+                                  expression-end-stmt declare-variable-stmt)
+                                '(for-stmt
+                                  expression-end-stmt for-stmt)
                                 '(where-stmt
                                   expression-end-stmt where-stmt)
                                 '(order-by-stmt
