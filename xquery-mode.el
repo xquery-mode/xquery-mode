@@ -403,7 +403,7 @@ START and END are region boundaries."
                        ("[[:alnum:]-_.:/@]+" . word-stmt)))
            (expression-lookup-fn (lambda (stream line-stream found-literal offset)
                                    (when (memq (caar (append line-stream stream))
-                                               '(where-stmt
+                                               '(assign-stmt where-stmt
                                                  then-stmt else-stmt default-stmt
                                                  open-square-bracket-stmt xml-comment-start-stmt))
                                      (list 'expression-start-stmt offset))))
