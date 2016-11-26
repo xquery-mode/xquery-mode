@@ -445,6 +445,8 @@ START and END are region boundaries."
                                   expression-end-stmt default-stmt)
                                 '(let-stmt
                                   expression-end-stmt let-stmt)
+                                '(semicolon-stmt
+                                  expression-end-stmt semicolon-stmt)
                                 (list 'comment-start-stmt
                                       curly-expression-lookup-fn 'expression-end-stmt 'comment-start-stmt)
                                 (list 'xml-comment-start-stmt
