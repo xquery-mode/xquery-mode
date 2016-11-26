@@ -485,7 +485,7 @@ START and END are region boundaries."
                        (if-stmt else-stmt)
                        (default-stmt typeswitch-stmt switch-stmt)
                        (catch-stmt try-stmt)
-                       (semicolon-stmt namespace-stmt import-stmt assign-stmt)
+                       (semicolon-stmt namespace-stmt import-stmt assign-stmt declare-variable-stmt)
                        (comment-end-stmt comment-start-stmt)
                        (xml-comment-end-stmt xml-comment-start-stmt)
                        (cdata-end-stmt cdata-start-stmt)
