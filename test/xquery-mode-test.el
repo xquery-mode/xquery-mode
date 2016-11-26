@@ -19,9 +19,9 @@
         (with-current-buffer (generate-new-buffer (format "*fixture-%s*" ,num))
           (insert ,fixture)
           (goto-char (point-min))
-          (while (re-search-forward "^ *" nil t)
-            ;; FIXME: Revert this temporarily disabled TAB mutation.
-            (replace-match (make-string (random 20) ? )))
+          ;; FIXME: Revert this temporarily disabled mutation.
+          (while (re-search-forward "^ +" nil t)
+            (replace-match ""))
           (xquery-mode)
           (indent-region (point-min) (point-max))
           (delete-trailing-whitespace)  ;; FIXME: Remove duty cleanup.
