@@ -10,4 +10,5 @@ cask exec emacs -Q -nw                                                          
      --eval "(ediff-buffers \"$1.xqy\" \"*fixture-$1*\")"                        \
      --eval '(with-current-buffer "*Ediff Control Panel*" (ediff-toggle-split))' \
      --eval "(load-theme 'tango-dark)"                                           \
-     --eval '(setq-default truncate-lines t)'
+     --eval '(setq-default truncate-lines t)'                                    \
+     --eval '(run-at-time .5 nil (lambda () (switch-to-buffer-other-window "*Ediff Control Panel*")))'
