@@ -110,19 +110,16 @@ declare private function apply(
    :)
   try {
     xdmp:eval('
-      xquery version "1.0-ml";
-      import module namespace test = "http://github.com/robwhitby/xray/test" at "' || $path || '";
+xquery version "1.0-ml";
+import module namespace test = "http://github.com/robwhitby/xray/test" at "' || $path || '";
 
-      let $start := xdmp:elapsed-time()
-      let $results := try { test:' || fn-local-name($fn) || '() } catch($err) { $err }
-      let $duration := xdmp:elapsed-time() - $start
-      let $map := map:map()
-      let $_ := (
-        map:put($map, "results", $results),
-        map:put($map, "time", $duration)
-      )
-      return $map
-    ')
+let $start := xdmp:elapsed-time()
+let $results := try { test:' || fn-local-name($fn) || '() } catch($err) { $err }
+let $duration := xdmp:elapsed-time() - $start
+let $map := map:map()
+let $_ := (map:put($map, "results", $results), map:put($map, "time", $duration))
+return $map
+')
   }
   catch * { $err:additional }
 };
@@ -135,13 +132,13 @@ declare function run-module(
 {
   try {
     xdmp:eval('
-      xquery version "1.0-ml";
-      import module namespace xray = "http://github.com/robwhitby/xray" at "' || $ROOT || '/xray/src/xray.xqy";
-      import module namespace test = "http://github.com/robwhitby/xray/test" at "' || $path || '";
-      declare variable $xray:path as xs:string external;
-      declare variable $xray:test-pattern as xs:string external;
-      xray:run-module-tests($xray:path, $xray:test-pattern)
-    ',
+xquery version "1.0-ml";
+import module namespace xray = "http://github.com/robwhitby/xray" at "' || $ROOT || '/xray/src/xray.xqy";
+import module namespace test = "http://github.com/robwhitby/xray/test" at "' || $path || '";
+declare variable $xray:path as xs:string external;
+declare variable $xray:test-pattern as xs:string external;
+xray:run-module-tests($xray:path, $xray:test-pattern)
+',
               (xs:QName("path"), $path, xs:QName("test-pattern"), fn:string($test-pattern))
              )
   }
