@@ -518,7 +518,10 @@ START and END are region boundaries."
                          escaped-quote-stmt close-quote-stmt word-stmt)))
            ;; TODO: don't calculate indent pairs.  Write it declarative way.
            ;; TODO: make variable below calculated only.
-           (non-pairs '(comment-end-stmt xml-comment-end-stmt cdata-end-stmt var-stmt word-stmt assign-stmt))
+           (non-pairs '(cdata-end-stmt
+                        comment-end-stmt xml-comment-end-stmt
+                        close-double-quote-stmt close-quote-stmt
+                        var-stmt word-stmt assign-stmt))
            ;; TODO: This duplication makes me sad very often.
            (pairs '((close-curly-bracket-stmt open-curly-bracket-stmt)
                     (close-round-bracket-stmt function-name-stmt)))
@@ -608,7 +611,7 @@ START and END are region boundaries."
                   (setq current-indent (+ previous-indent previous-offset xquery-mode-indent-width)))
                  ((memq previous-token '(expression-start-stmt curly-expression-start-stmt))
                   (setq current-indent (+ previous-indent previous-offset)))
-                 ((eq previous-token 'cdata-start-stmt)
+                 ((memq previous-token '(cdata-start-stmt double-quote-stmt quote-stmt))
                   (setq current-indent (current-indentation)))
                  ((eq previous-token 'buffer-beginning)
                   (setq current-indent previous-indent))))
