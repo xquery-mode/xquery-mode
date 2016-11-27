@@ -441,6 +441,8 @@ START and END are region boundaries."
                                   expression-end-stmt else-stmt)
                                 '(else-if-stmt
                                   expression-end-stmt else-if-stmt)
+                                '(case-stmt
+                                  expression-end-stmt case-stmt)
                                 (list 'default-stmt
                                       (lambda (stream line-stream found-literal offset)
                                         ;; TODO: Calculate item from opposite and found-literal.
@@ -463,9 +465,9 @@ START and END are region boundaries."
                                 '(semicolon-stmt
                                   expression-end-stmt semicolon-stmt)
                                 (list 'comment-start-stmt
-                                      curly-expression-lookup-fn 'expression-end-stmt 'comment-start-stmt)
+                                      curly-expression-lookup-fn 'comment-start-stmt)
                                 (list 'xml-comment-start-stmt
-                                      curly-expression-lookup-fn 'expression-end-stmt 'xml-comment-start-stmt)
+                                      curly-expression-lookup-fn 'xml-comment-start-stmt)
                                 '(xml-comment-end-stmt
                                   expression-end-stmt xml-comment-end-stmt)
                                 '(cdata-start-stmt
@@ -569,9 +571,7 @@ START and END are region boundaries."
                                     (then-stmt if-stmt)
                                     (else-if-stmt if-stmt)
                                     (let-stmt for-stmt)
-                                    (case-stmt typeswitch-stmt switch-stmt)
-                                    (comment-start-stmt typeswitch-stmt switch-stmt)
-                                    (xml-comment-start-stmt typeswitch-stmt switch-stmt))))
+                                    (case-stmt typeswitch-stmt switch-stmt))))
            (opening (apply #'append (mapcar #'cdr opposite)))
            (closing (mapcar #'car opposite))
            (re-table (mapcar (lambda (g)
