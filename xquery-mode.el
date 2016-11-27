@@ -460,8 +460,8 @@ START and END are region boundaries."
                                                        :test (lambda (item s)
                                                                (memq s item)))
                                           (list 'default-stmt offset))))
-                                '(let-stmt
-                                  expression-end-stmt let-stmt)
+                                (list 'let-stmt
+                                      curly-expression-lookup-fn 'expression-end-stmt 'let-stmt)
                                 '(semicolon-stmt
                                   expression-end-stmt semicolon-stmt)
                                 (list 'comment-start-stmt
