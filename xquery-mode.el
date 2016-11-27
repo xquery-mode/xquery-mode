@@ -355,7 +355,7 @@ otherwise."
 START and END are region boundaries."
   (interactive "r")
   (save-excursion
-    (let* ((literals '(("\\(?:\\<declare\\>\\|\\<define\\>\\)\\(?:\\s-+\\<private\\>\\)?\\s-+\\<function\\>.*(" . function-name-stmt)
+    (let* ((literals '(("\\(?:\\<declare\\>\\|\\<define\\>\\)\\(?:\\s-+\\<private\\>\\)?\\s-+\\<function\\>.*?(" . function-name-stmt)
                        ("\\<declare\\>\\s-+\\<variable\\>" . declare-variable-stmt)
                        ("\\(?:\\<module\\>\\|\\<declare\\>\\s-+\\<default\\>\\s-+\\<function\\>\\)\\s-+\\<namespace\\>" . namespace-stmt)
                        ("\\<import\\>\\s-+\\<module\\>" . import-stmt)
