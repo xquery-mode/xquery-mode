@@ -441,8 +441,23 @@ START and END are region boundaries."
                                   expression-end-stmt else-stmt)
                                 '(else-if-stmt
                                   expression-end-stmt else-if-stmt)
-                                '(default-stmt
-                                  expression-end-stmt default-stmt)
+                                (list 'default-stmt
+                                      (lambda (stream line-stream found-literal offset)
+                                        ;; TODO: Calculate item from opposite and found-literal.
+                                        (when (cl-find '(typeswitch-stmt switch-stmt)
+                                                       (append line-stream stream)
+                                                       :key #'car
+                                                       :test (lambda (item s)
+                                                               (memq s item)))
+                                          (list 'expression-end-stmt offset)))
+                                      (lambda (stream line-stream found-literal offset)
+                                        ;; TODO: Calculate item from opposite and found-literal.
+                                        (when (cl-find '(typeswitch-stmt switch-stmt)
+                                                       (append line-stream stream)
+                                                       :key #'car
+                                                       :test (lambda (item s)
+                                                               (memq s item)))
+                                          (list 'default-stmt offset))))
                                 '(let-stmt
                                   expression-end-stmt let-stmt)
                                 '(semicolon-stmt
