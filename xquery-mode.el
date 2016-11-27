@@ -372,7 +372,8 @@ START and END are region boundaries."
                        ("(" . open-round-bracket-stmt)
                        (")" . close-round-bracket-stmt)
                        ("\\(?:<[^>/ ]+?\\>[^>]*/>\\|<\\?[^>/ ]+?\\>[^>]*\\?>\\)" . self-closing-xml-tag-stmt)
-                       ("<[^>/ ]+?\\>[^>]*>" . open-xml-tag-stmt)
+                       ("<[^>/ ]+?\\>" . open-xml-tag-start-stmt)
+                       (">" . open-xml-tag-end-stmt)
                        ("</[^>]+>" . close-xml-tag-stmt)
                        ("\"" . double-quote-stmt)
                        ("'" . quote-stmt)
@@ -403,9 +404,9 @@ START and END are region boundaries."
                        ("[[:alnum:]-_.:/@]*[[:alnum:]]" . word-stmt)))
            (expression-lookup-fn (lambda (stream line-stream found-literal offset)
                                    (when (memq (caar (append line-stream stream))
-                                               '(assign-stmt where-stmt
-                                                 then-stmt else-stmt default-stmt
-                                                 open-square-bracket-stmt xml-comment-start-stmt))
+                                               '(open-square-bracket-stmt
+                                                 assign-stmt where-stmt then-stmt else-stmt
+                                                 default-stmt xml-comment-start-stmt open-xml-tag-start-stmt))
                                      (list 'expression-start-stmt offset))))
            (curly-expression-lookup-fn (lambda (stream line-stream found-literal offset)
                                          (when (eq (caar (append line-stream stream))
@@ -470,6 +471,8 @@ START and END are region boundaries."
                                       curly-expression-lookup-fn 'xml-comment-start-stmt)
                                 '(xml-comment-end-stmt
                                   expression-end-stmt xml-comment-end-stmt)
+                                '(open-xml-tag-end-stmt
+                                  expression-end-stmt open-xml-tag-end-stmt)
                                 '(cdata-start-stmt
                                   expression-end-stmt cdata-start-stmt)
                                 '(comma-stmt
@@ -481,6 +484,7 @@ START and END are region boundaries."
                        (element-stmt . expression-stmt)
                        (open-curly-bracket-stmt . expression-stmt)
                        (open-round-bracket-stmt . expression-stmt)
+                       (open-xml-tag-start-stmt . open-xml-tag-start-stmt)
                        (open-xml-tag-stmt . expression-stmt)
                        (else-stmt . expression-stmt)
                        (default-stmt . expression-stmt)
@@ -494,6 +498,7 @@ START and END are region boundaries."
            (opposite '((close-curly-bracket-stmt open-curly-bracket-stmt)
                        (close-square-bracket-stmt open-square-bracket-stmt)
                        (close-round-bracket-stmt open-round-bracket-stmt function-name-stmt)
+                       (open-xml-tag-end-stmt open-xml-tag-start-stmt)
                        (close-xml-tag-stmt open-xml-tag-stmt)
                        (close-double-quote-stmt double-quote-stmt)
                        (close-quote-stmt quote-stmt)
