@@ -484,7 +484,7 @@ START and END are region boundaries."
                        (element-stmt . expression-stmt)
                        (open-curly-bracket-stmt . expression-stmt)
                        (open-round-bracket-stmt . expression-stmt)
-                       (open-xml-tag-start-stmt . open-xml-tag-start-stmt)
+                       (open-xml-tag-start-stmt . open-xml-tag-stmt)
                        (open-xml-tag-stmt . expression-stmt)
                        (else-stmt . expression-stmt)
                        (default-stmt . expression-stmt)
