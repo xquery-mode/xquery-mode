@@ -16,10 +16,10 @@ as element(div)
   let $labels := map:put($params,"{http://marklogic.com/appservices/config}LABELS",$config:LABELS)
   let $title := xdmp:xslt-invoke($config:TRANSFORM-ABSTRACT-TITLE,$result,$params)
   return
-  <div class="title">
-    <a href="{ concat("/detail",encode-for-uri($uri),"?q=",if ($config:CONTEXT/*:q) then encode-for-uri($config:CONTEXT/*:q) else (),
-               if ($config:CONTEXT/*:start) then concat("&amp;start=", encode-for-uri($config:CONTEXT/*:start)) else ()) }">
-      <span class="result-title">{if ($title) then $title else <emphasis>[view item]</emphasis>}</span>
-    </a>
-  </div>
+    <div class="title">
+      <a href="{ concat("/detail",encode-for-uri($uri),"?q=",if ($config:CONTEXT/*:q) then encode-for-uri($config:CONTEXT/*:q) else (),
+                 if ($config:CONTEXT/*:start) then concat("&amp;start=", encode-for-uri($config:CONTEXT/*:start)) else ()) }">
+        <span class="result-title">{if ($title) then $title else <emphasis>[view item]</emphasis>}</span>
+      </a>
+    </div>
 };
