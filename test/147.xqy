@@ -1,18 +1,4 @@
-(:
-Copyright 2012-2015 MarkLogic Corporation
 
-Licensed under the Apache License, Version 2.0 (the "License");
-you may not use this file except in compliance with the License.
-You may obtain a copy of the License at
-
-   http://www.apache.org/licenses/LICENSE-2.0
-
-Unless required by applicable law or agreed to in writing, software
-distributed under the License is distributed on an "AS IS" BASIS,
-WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-See the License for the specific language governing permissions and
-limitations under the License.
-:)
 xquery version "1.0-ml";
 
 import module namespace vh = "http://marklogic.com/roxy/view-helper" at "/roxy/lib/view-helper.xqy";
@@ -51,12 +37,12 @@ declare variable $q as xs:string? := vh:get("q");
       <div class="header" arcsize="5 5 0 0">
         <label>Search</label>
         <form id="searchform" name="searchform" method="GET" action="/">
-	        <input type="text" id="q" name="q" class="searchbox" value="{$q}"/>
-	          <div id="suggestions"><!--suggestions here--></div>
-	          <div id="searchbutton" class="searchbutton">
-              <button type="submit" title="Run Search"><img src="/images/mt_icon_search.gif"/></button>
-            </div>
-	      </form>
+          <input type="text" id="q" name="q" class="searchbox" value="{$q}"/>
+          <div id="suggestions"><!--suggestions here--></div>
+          <div id="searchbutton" class="searchbutton">
+            <button type="submit" title="Run Search"><img src="/images/mt_icon_search.gif"/></button>
+          </div>
+        </form>
       </div>
       { $sidebar }
       <div class="content">
