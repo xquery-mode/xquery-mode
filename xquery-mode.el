@@ -361,6 +361,7 @@ START and END are region boundaries."
                        ("\\<import\\>\\s-+\\<module\\>" . import-stmt)
                        ("(:" . comment-start-stmt)
                        (":)" . comment-end-stmt)
+                       ("=>" . arrow-operator-stmt)
                        ("<!\\[CDATA\\[" . cdata-start-stmt)
                        ("\\]\\]>" . cdata-end-stmt)
                        ("<!--" . xml-comment-start-stmt)
