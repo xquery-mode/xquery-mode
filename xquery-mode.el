@@ -558,7 +558,7 @@ START and END are region boundaries."
                          close-quote-stmt word-stmt)
                        '(inside-xml-tag
                          cdata-start-stmt xml-comment-start-stmt open-curly-bracket-stmt
-                         self-closing-xml-tag-stmt open-xml-tag-stmt close-xml-tag-stmt)))
+                         self-closing-xml-tag-stmt open-xml-tag-start-stmt close-xml-tag-stmt)))
            ;; TODO: don't calculate indent pairs.  Write it declarative way.
            ;; TODO: make variable below calculated only.
            (non-pairs '(cdata-end-stmt
