@@ -615,7 +615,7 @@ START and END are region boundaries."
         (setq align-column (current-indentation)))
       (push (list 'buffer-beginning align-column 0) stream)
       (while (not exit)
-        (if (re-search-forward re (min end (line-end-position)) t)
+        (if (re-search-forward re (min (line-end-position) end) t)
             (let* ((matched-group (cl-find-if #'match-string-no-properties groups))
                    (found-literal (cdr (assoc matched-group group-lookup)))
                    (offset (- (current-column)
@@ -710,8 +710,7 @@ START and END are region boundaries."
                               group-lookup next-re-lookups)))))))
           (if (>= (line-end-position) end)
               (setq exit t)
-            (when (and (<= start (point))
-                       (<= (point) end)) ;; TODO: ?
+            (when (<= start (point))
               (setq end (+ end (- current-indent (current-indentation))))
               (indent-line-to current-indent))
             (setq at-front t)
