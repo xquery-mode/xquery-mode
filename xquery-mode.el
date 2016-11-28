@@ -451,17 +451,15 @@ START and END are region boundaries."
                                         (when (cl-find '(typeswitch-stmt switch-stmt)
                                                        stream
                                                        :key #'car
-                                                       :test (lambda (item s)
-                                                               (memq s item)))
-                                          (list 'expression-end-stmt offset)))
+                                                       :test (lambda (item s) (memq s item)))
+                                          (list 'expression-end-stmt nil offset)))
                                       (lambda (stream found-literal offset)
                                         ;; TODO: Calculate item from opposite and found-literal.
                                         (when (cl-find '(typeswitch-stmt switch-stmt)
                                                        stream
                                                        :key #'car
-                                                       :test (lambda (item s)
-                                                               (memq s item)))
-                                          (list 'default-stmt offset))))
+                                                       :test (lambda (item s) (memq s item)))
+                                          (list 'default-stmt nil offset))))
                                 (list 'let-stmt
                                       curly-expression-lookup-fn 'expression-end-stmt 'let-stmt)
                                 '(semicolon-stmt
