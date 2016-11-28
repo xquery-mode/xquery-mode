@@ -373,8 +373,9 @@ START and END are region boundaries."
                        ("(" . open-round-bracket-stmt)
                        (")" . close-round-bracket-stmt)
                        ;; FIXME: support multi line indent for self closing tags.
-                       ("\\(?:<[^>/ ]+?\\>[^>]*/>\\|<\\?[^>/ ]+?\\>[^>]*\\?>\\)" . self-closing-xml-tag-stmt)
+                       ("<\\?[^>/ ]+?\\>[^>]*\\?>" . self-closing-xml-tag-stmt)
                        ("<[^>/ ]+?\\>" . open-xml-tag-start-stmt)
+                       ("/>" . self-closing-xml-tag-end-stmt)
                        (">" . open-xml-tag-end-stmt)
                        ("</[^>]+>" . close-xml-tag-stmt)
                        ("\"" . double-quote-stmt)
@@ -471,6 +472,8 @@ START and END are region boundaries."
                                       curly-expression-lookup-fn 'xml-comment-start-stmt)
                                 '(xml-comment-end-stmt
                                   expression-end-stmt xml-comment-end-stmt)
+                                '(self-closing-xml-tag-end-stmt
+                                  expression-end-stmt self-closing-xml-tag-end-stmt)
                                 '(open-xml-tag-end-stmt
                                   expression-end-stmt open-xml-tag-end-stmt)
                                 '(cdata-start-stmt
@@ -484,7 +487,8 @@ START and END are region boundaries."
                        (element-stmt . expression-stmt)
                        (open-curly-bracket-stmt . expression-stmt)
                        (open-round-bracket-stmt . expression-stmt)
-                       (open-xml-tag-start-stmt . open-xml-tag-stmt)
+                       ((open-xml-tag-start-stmt open-xml-tag-end-stmt) . open-xml-tag-stmt)
+                       ((open-xml-tag-start-stmt self-closing-xml-tag-end-stmt) . self-closing-xml-tag-stmt)
                        (open-xml-tag-stmt . expression-stmt)
                        (else-stmt . expression-stmt)
                        (default-stmt . expression-stmt)
@@ -498,6 +502,7 @@ START and END are region boundaries."
            (opposite '((close-curly-bracket-stmt open-curly-bracket-stmt)
                        (close-square-bracket-stmt open-square-bracket-stmt)
                        (close-round-bracket-stmt open-round-bracket-stmt function-name-stmt)
+                       (self-closing-xml-tag-end-stmt open-xml-tag-start-stmt)
                        (open-xml-tag-end-stmt open-xml-tag-start-stmt)
                        (close-xml-tag-stmt open-xml-tag-stmt)
                        (close-double-quote-stmt double-quote-stmt)
@@ -558,7 +563,8 @@ START and END are region boundaries."
                        '(inside-string
                          close-quote-stmt word-stmt)
                        '(inside-open-xml-tag
-                         open-xml-tag-end-stmt double-quote-stmt quote-stmt colon-stmt word-stmt)
+                         self-closing-xml-tag-end-stmt open-xml-tag-end-stmt
+                         double-quote-stmt quote-stmt colon-stmt word-stmt)
                        '(inside-xml-tag
                          cdata-start-stmt xml-comment-start-stmt open-curly-bracket-stmt
                          self-closing-xml-tag-stmt open-xml-tag-start-stmt close-xml-tag-stmt
@@ -630,7 +636,10 @@ START and END are region boundaries."
                              (memq (caar stream)
                                    (cdr (assoc token opposite))))
                     (let* ((closed (car (pop stream)))
-                           (trigger (cdr (assoc closed on-close))))
+                           (trigger (cdr (cl-assoc
+                                          (list closed token)
+                                          on-close
+                                          :test (lambda (item s) (if (consp s) (equal item s) (eq (car item) s)))))))
                       (when trigger
                         (push (list trigger nil nil) buf))))))
               (when at-front
@@ -677,9 +686,19 @@ START and END are region boundaries."
                                    (cdr (assoc buf-token opposite))))
                     (cl-destructuring-bind (closed-token closed-indent closed-offset)
                         (pop stream)
-                      (let ((trigger (cdr (assoc closed-token on-close))))
+                      (let ((trigger (cdr (cl-assoc
+                                           (list closed-token buf-token)
+                                           on-close
+                                           :test (lambda (item s) (if (consp s) (equal item s) (eq (car item) s)))))))
                         (when trigger
-                          (push (list trigger closed-indent closed-offset) buf)))))
+                          (let ((trigger-buf (or (delq nil
+                                                       (mapcar (lambda (s)
+                                                                 (if (symbolp s)
+                                                                     (list s closed-indent closed-offset)
+                                                                   (apply s stream trigger closed-offset nil)))
+                                                               (cdr (assoc trigger substitutions))))
+                                                 (list (list trigger closed-indent closed-offset)))))
+                            (setq buf (append trigger-buf buf)))))))
                   (when (memq buf-token opening)
                     (push (list buf-token (or buf-indent current-indent) buf-offset) stream))
                   (let ((next-re-key (cdr (assoc buf-token next-re-table))))
