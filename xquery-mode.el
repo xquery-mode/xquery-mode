@@ -537,6 +537,7 @@ START and END are region boundaries."
                                 '(close-double-quote-stmt . generic)
                                 '(quote-stmt . inside-string)
                                 '(close-quote-stmt . generic)
+                                '(open-xml-tag-start-stmt . inside-open-xml-tag)
                                 '(open-xml-tag-stmt . inside-xml-tag)
                                 '(close-xml-tag-stmt . generic)
                                 '(open-curly-bracket-stmt . generic)
@@ -556,9 +557,11 @@ START and END are region boundaries."
                          close-double-quote-stmt word-stmt)
                        '(inside-string
                          close-quote-stmt word-stmt)
+                       '(inside-open-xml-tag
+                         open-xml-tag-end-stmt double-quote-stmt quote-stmt colon-stmt word-stmt)
                        '(inside-xml-tag
                          cdata-start-stmt xml-comment-start-stmt open-curly-bracket-stmt
-                         self-closing-xml-tag-stmt open-xml-tag-start-stmt open-xml-tag-end-stmt close-xml-tag-stmt
+                         self-closing-xml-tag-stmt open-xml-tag-start-stmt close-xml-tag-stmt
                          word-stmt)))
            ;; TODO: don't calculate indent pairs.  Write it declarative way.
            ;; TODO: make variable below calculated only.
