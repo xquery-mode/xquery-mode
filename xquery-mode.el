@@ -372,10 +372,8 @@ START and END are region boundaries."
                        ("\\]" . close-square-bracket-stmt)
                        ("(" . open-round-bracket-stmt)
                        (")" . close-round-bracket-stmt)
-                       ;; FIXME: support multi line indent for self closing tags.
-                       ("<\\?[^>/ ]+?\\>[^>]*\\?>" . self-closing-xml-tag-stmt)
-                       ("<[^>/ ]+?\\>" . open-xml-tag-start-stmt)
-                       ("/>" . self-closing-xml-tag-end-stmt)
+                       ("<\\(?:\\?\\)?[^>/ ]+?\\>" . open-xml-tag-start-stmt)
+                       ("\\(?:/\\|\\?\\)>" . self-closing-xml-tag-end-stmt)
                        (">" . open-xml-tag-end-stmt)
                        ("</[^>]+>" . close-xml-tag-stmt)
                        ("\"" . double-quote-stmt)
@@ -567,7 +565,7 @@ START and END are region boundaries."
                          double-quote-stmt quote-stmt colon-stmt word-stmt)
                        '(inside-xml-tag
                          cdata-start-stmt xml-comment-start-stmt open-curly-bracket-stmt
-                         self-closing-xml-tag-stmt open-xml-tag-start-stmt close-xml-tag-stmt
+                         open-xml-tag-start-stmt close-xml-tag-stmt
                          word-stmt)))
            ;; TODO: don't calculate indent pairs.  Write it declarative way.
            ;; TODO: make variable below calculated only.
