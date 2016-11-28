@@ -407,7 +407,7 @@ START and END are region boundaries."
            (expression-lookup-fn (lambda (stream found-literal offset)
                                    (when (memq (caar stream)
                                                '(open-square-bracket-stmt
-                                                 assign-stmt where-stmt then-stmt else-stmt
+                                                 assign-stmt where-stmt if-stmt else-stmt
                                                  default-stmt xml-comment-start-stmt open-xml-tag-start-stmt))
                                      (list 'expression-start-stmt nil offset))))
            (curly-expression-lookup-fn (lambda (stream found-literal offset)
