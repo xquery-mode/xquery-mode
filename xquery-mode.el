@@ -603,19 +603,18 @@ START and END are region boundaries."
                                                      "\\|")))
                                  (list name re groups group-lookup)))
                              grid))
-           (current-indent 0)
            (re (cadr (assoc 'generic re-table)))
            (groups (cl-caddr (assoc 'generic re-table)))
            (group-lookup (cl-cadddr (assoc 'generic re-table)))
            stream
            at-front
-           align-column
+           current-indent
            exit)
       (goto-char start)
       (if (eq (forward-line -1) -1)
-          (setq align-column 0)
-        (setq align-column (current-indentation)))
-      (push (list 'buffer-beginning align-column 0) stream)
+          (setq current-indent 0)
+        (setq current-indent (current-indentation)))
+      (push (list 'buffer-beginning current-indent 0) stream)
       (while (not exit)
         (if (re-search-forward re (min (line-end-position) end) t)
             (let* ((matched-group (cl-find-if #'match-string-no-properties groups))
