@@ -62,7 +62,7 @@
   (with-current-buffer (generate-new-buffer "*fixture-cdata*")
     (insert "<a><![CDATA[Hello  World
 
-a       b
+  a     b
         a d]]></a>
 ")
     (goto-char (point-min))
@@ -70,7 +70,7 @@ a       b
     (indent-region (point-min) (point-max))
     (should (string= "<a><![CDATA[Hello  World
 
-a       b
+  a     b
         a d]]></a>
 " (buffer-substring-no-properties (point-min) (point-max))))))
 

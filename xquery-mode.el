@@ -709,8 +709,9 @@ START and END are region boundaries."
                         (setq re next-re-re
                               groups next-re-groups
                               group-lookup next-re-lookups)))))))
-          (setq end (+ end (- current-indent (current-indentation))))
-          (indent-line-to current-indent)
+          (unless at-front
+            (setq end (+ end (- current-indent (current-indentation))))
+            (indent-line-to current-indent))
           (if (>= (line-end-position) end)
               (setq exit t)
             (setq at-front t)
