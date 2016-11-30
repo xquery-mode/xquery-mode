@@ -18,11 +18,11 @@ document {
             let $entity-type := $model=>map:get("definitions")=>map:get($entity-type-name)
             let $properties := map:get($entity-type, "properties")
             return
-            concat($property-comment,
-                   $function-call-string,
-                   functx:pad-string-to-length("'" || $property-name || "',", " ", max((  (string-length($property-name)+4), 25) )+1 ),
-                   $value,
-                   ")&#10;")
+              concat($property-comment,
+                     $function-call-string,
+                     functx:pad-string-to-length("'" || $property-name || "',", " ", max((  (string-length($property-name)+4), 25) )+1 ),
+                     $value,
+                     ")&#10;")
             (: end code generation block :)
           }
   </module>/text()
