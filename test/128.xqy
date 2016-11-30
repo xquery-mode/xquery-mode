@@ -97,7 +97,7 @@ as empty-sequence()
       return map:put($map,$id,$entry)
     return $map
 
-  (: the callback function for ingest :)
+           (: the callback function for ingest :)
   let $function := xdmp:function(xs:QName("feed:process-file"))
   let $ingestion :=
     for $transaction at $index in $transactions
