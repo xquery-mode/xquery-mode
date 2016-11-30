@@ -366,6 +366,8 @@ START and END are region boundaries."
                        ("\\]\\]>" . cdata-end-stmt)
                        ("<!--" . xml-comment-start-stmt)
                        ("-->" . xml-comment-end-stmt)
+                       ("{{" . escaped-open-curly-bracket-stmt)
+                       ("}}" . escaped-close-curly-bracket-stmt)
                        ("{" . open-curly-bracket-stmt)
                        ("}" . close-curly-bracket-stmt)
                        ("\\[" . open-square-bracket-stmt)
@@ -590,7 +592,9 @@ START and END are region boundaries."
                                                                     (quote-stmt 'inside-string)
                                                                     (t 'generic))))))
            (grid (list (cons 'generic
-                             (cl-remove-if (lambda (x) (memq x '(close-quote-stmt
+                             (cl-remove-if (lambda (x) (memq x '(escaped-open-curly-bracket-stmt
+                                                                 escaped-close-curly-bracket-stmt
+                                                                 close-quote-stmt
                                                                  close-double-quote-stmt
                                                                  self-closing-xml-tag-end-stmt
                                                                  open-xml-tag-end-stmt
@@ -610,8 +614,9 @@ START and END are region boundaries."
                          self-closing-xml-tag-end-stmt open-xml-tag-end-stmt
                          double-quote-stmt quote-stmt colon-stmt word-stmt)
                        '(inside-xml-tag
-                         cdata-start-stmt xml-comment-start-stmt open-curly-bracket-stmt
-                         open-xml-tag-start-stmt close-xml-tag-stmt
+                         cdata-start-stmt xml-comment-start-stmt
+                         escaped-open-curly-bracket-stmt escaped-close-curly-bracket-stmt
+                         open-curly-bracket-stmt open-xml-tag-start-stmt close-xml-tag-stmt
                          word-stmt)))
            ;; TODO: don't calculate indent pairs.  Write it declarative way.
            ;; TODO: make variable below calculated only.
