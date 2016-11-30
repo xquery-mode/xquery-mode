@@ -415,8 +415,11 @@ START and END are region boundaries."
                                          (when (eq (caar stream)
                                                    'open-curly-bracket-stmt)
                                            (list 'curly-expression-start-stmt nil offset))))
+           (for-expression-lookup-fn (lambda (stream found-literal offset)
+                                       (when (eq (caar stream) 'for-stmt)
+                                         (list 'for-expression-start-stmt nil offset))))
            (substitutions (list (list 'var-stmt
-                                      expression-lookup-fn curly-expression-lookup-fn 'var-stmt)
+                                      expression-lookup-fn curly-expression-lookup-fn for-expression-lookup-fn 'var-stmt)
                                 (list 'word-stmt
                                       expression-lookup-fn curly-expression-lookup-fn 'word-stmt 'element-arg-end-stmt)
                                 (list 'non-blank-stmt
@@ -434,13 +437,13 @@ START and END are region boundaries."
                                 '(declare-variable-stmt
                                   expression-end-stmt declare-variable-stmt)
                                 '(for-stmt
-                                  expression-end-stmt for-stmt)
+                                  for-expression-end-stmt expression-end-stmt for-stmt)
                                 '(where-stmt
-                                  expression-end-stmt where-stmt)
+                                  for-expression-end-stmt expression-end-stmt where-stmt)
                                 '(order-by-stmt
-                                  expression-end-stmt order-by-stmt)
+                                  for-expression-end-stmt expression-end-stmt order-by-stmt)
                                 '(return-stmt
-                                  expression-end-stmt return-stmt)
+                                  for-expression-end-stmt expression-end-stmt return-stmt)
                                 '(close-curly-bracket-stmt
                                   expression-end-stmt curly-expression-end-stmt close-curly-bracket-stmt)
                                 '(close-square-bracket-stmt
@@ -469,7 +472,7 @@ START and END are region boundaries."
                                                        :test (lambda (item s) (memq s item)))
                                           (list 'default-stmt nil offset))))
                                 (list 'let-stmt
-                                      curly-expression-lookup-fn 'expression-end-stmt 'let-stmt)
+                                      curly-expression-lookup-fn 'for-expression-end-stmt 'expression-end-stmt 'let-stmt)
                                 '(semicolon-stmt
                                   expression-end-stmt semicolon-stmt)
                                 (list 'comment-start-stmt
@@ -532,8 +535,9 @@ START and END are region boundaries."
                        (element-arg-end-stmt element-arg-stmt)
                        (expression-end-stmt expression-start-stmt)
                        (curly-expression-end-stmt curly-expression-start-stmt expression-start-stmt)
+                       (for-expression-end-stmt for-expression-start-stmt)
                        (var-stmt assign-stmt return-stmt)))
-           (implicit-statements '(expression-end-stmt curly-expression-end-stmt expression-stmt))
+           (implicit-statements '(expression-end-stmt curly-expression-end-stmt expression-stmt for-expression-end-stmt))
            ;; TODO: No seriously, I should start to use ` and , lisp features.
            (next-re-table (list '(comment-start-stmt . inside-comment)
                                 '(comment-end-stmt . generic)
@@ -681,7 +685,7 @@ START and END are region boundaries."
                                            typeswitch-stmt switch-stmt default-stmt
                                            try-stmt catch-stmt))
                     (setq current-indent (+ previous-indent previous-offset xquery-mode-indent-width)))
-                   ((memq previous-token '(expression-start-stmt curly-expression-start-stmt))
+                   ((memq previous-token '(expression-start-stmt curly-expression-start-stmt for-expression-start-stmt))
                     (setq current-indent (+ previous-indent previous-offset)))
                    ((memq previous-token '(cdata-start-stmt double-quote-stmt quote-stmt))
                     (setq current-indent (current-indentation)))
