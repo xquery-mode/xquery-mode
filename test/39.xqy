@@ -102,13 +102,13 @@ declare function rest-impl:rewrite(
   let $endpoint  := $request/@endpoint/string()
   let $uri       := map:get($reqenv, "uri")
 
-  (: Ok. Now the tricky bit is that we need to add the uri-param parameters to the
-     rewritten request URI without disturbing the actual parameters that might have
-     been passed there. But, there's a wrinkle: if there's a parameter that
-     is *both* a URI param and is passed on the URI, we need to make sure that we
-     don't duplicate it. And another wrinkle: we want to make defaulted parameters
-     explicit in order to make the endpoint's job easier.
-   :)
+                    (: Ok. Now the tricky bit is that we need to add the uri-param parameters to the
+                       rewritten request URI without disturbing the actual parameters that might have
+                       been passed there. But, there's a wrinkle: if there's a parameter that
+                       is *both* a URI param and is passed on the URI, we need to make sure that we
+                       don't duplicate it. And another wrinkle: we want to make defaulted parameters
+                       explicit in order to make the endpoint's job easier.
+                     :)
 
   let $uriparams
     := for $name in $request/rest:uri-param/@name
@@ -293,7 +293,7 @@ declare function rest-impl:params(
   let $uri    := if (contains($uri,"?")) then substring-before($uri, "?") else $uri
   let $user-params := rest-impl:copy-map(map:get($reqenv, "params"))
 
-  (: Make sure we look at all params, not just top-level ones. :)
+                      (: Make sure we look at all params, not just top-level ones. :)
   let $allparam := ($request/rest:param, rest-impl:http($request, $reqenv)/rest:param)
 
   let $upset   := string((rest-impl:http($request,$reqenv)/@user-params,
@@ -303,10 +303,10 @@ declare function rest-impl:params(
   let $map := map:map()
   let $defmap := map:map()
 
-  (: Add the uri-param parameters to the map. If we're processing a request, then the
-     rewriter will already have put the uri-params in the user-params during the
-     rewrite, so just copy them over
-   :)
+                 (: Add the uri-param parameters to the map. If we're processing a request, then the
+                    rewriter will already have put the uri-params in the user-params during the
+                    rewrite, so just copy them over
+                  :)
   let $_   := for $param in $request/rest:uri-param
               return
                 if ($process-request)
@@ -314,7 +314,7 @@ declare function rest-impl:params(
                       map:delete($user-params, $param/@name))
                 else map:put($map, $param/@name, replace($uri, $request/@uri, $param))
 
-  (: Add the param parameters to the map :)
+                     (: Add the param parameters to the map :)
   let $_   := for $param in $allparam
               let $name    := string($param/@name)
               let $values  := if ($param/@from)
@@ -348,7 +348,7 @@ declare function rest-impl:params(
                 then ()
                 else map:put($map, $name, $value)
 
-  (: Add extra parameters to the map :)
+                     (: Add extra parameters to the map :)
   let $from := distinct-values($allparam/@from)
 
   let $uparams := if ($upset = "ignore")

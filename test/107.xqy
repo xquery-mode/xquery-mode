@@ -16,11 +16,11 @@ declare function ga:post(
   let $path := map:get($params, "codegen-dir")
   let $_ := xdmp:log("generate-artifacts extension called... saving stubs to " || $path)
 
-  (: the first model :)
+            (: the first model :)
   let $model := xdmp:filesystem-file($model-path || "/valid-ref.json")
                 =>xdmp:unquote()
 
-  (: a subsequent model :)
+                (: a subsequent model :)
   let $next := xdmp:filesystem-file($model-path || "/valid-ref-2.json")
                =>xdmp:unquote()
 

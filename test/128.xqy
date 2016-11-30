@@ -73,19 +73,19 @@ as empty-sequence()
 
   let $entry-count := fn:count($entries)
 
-  (: get transaction-size from policy :)
+                      (: get transaction-size from policy :)
   let $name := fn:data(info:ticket($ticket-id)/info:policy-name)
   let $max :=  fn:data(infodev:effective-policy($name,())/info:max-docs-per-transaction)
 
   let $transaction-size := $max
   let $total-transactions := ceiling($entry-count div $transaction-size)
 
-  (: set total documents and total transactions so UI displays collecting :)
+                             (: set total documents and total transactions so UI displays collecting :)
   let $set-total := infodev:ticket-set-total-documents($ticket-id, $entry-count)
   let $set-trans := infodev:ticket-set-total-transactions($ticket-id,$total-transactions)
 
-  (: create transactions by breaking document set into maps
-     each maps's documents are saved to the db in their own transaction :)
+                    (: create transactions by breaking document set into maps
+                       each maps's documents are saved to the db in their own transaction :)
   let $transactions :=
     for $i at $index in 1 to $total-transactions
     let $map := map:map()

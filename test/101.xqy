@@ -15,7 +15,7 @@ declare function northwind:extract-instance-OrderDetail(
        =>map:with('$type', 'OrderDetail')
        =>map:with('$ref', $source-node/OrderDetail/text())
        =>map:with('$attachments', $source-node)
-  (: otherwise populate this instance :)
+       (: otherwise populate this instance :)
   else json:object()
        (: The following line identifies the type of this instance.  Do not change it.      :)
        =>map:with('$type', 'OrderDetail')
