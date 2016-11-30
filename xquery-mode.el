@@ -490,7 +490,11 @@ START and END are region boundaries."
                                 '(comma-stmt
                                   expression-end-stmt comma-stmt)
                                 '(self-closing-xml-tag-stmt
-                                  self-closing-xml-tag-stmt expression-stmt)))
+                                  self-closing-xml-tag-stmt expression-stmt)
+                                (list 'double-quote-stmt
+                                      curly-expression-lookup-fn 'double-quote-stmt)
+                                (list 'quote-stmt
+                                      curly-expression-lookup-fn 'quote-stmt)))
            (on-close '((expression-start-stmt . expression-stmt)
                        (curly-expression-start-stmt . expression-stmt)
                        (element-stmt . expression-stmt)
