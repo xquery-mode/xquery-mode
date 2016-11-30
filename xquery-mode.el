@@ -553,12 +553,35 @@ START and END are region boundaries."
                                 '(cdata-start-stmt . inside-cdata)
                                 '(cdata-end-stmt . generic)
                                 '(double-quote-stmt . inside-double-quoted-string)
-                                '(close-double-quote-stmt . generic)
+                                (cons 'close-double-quote-stmt (lambda (stream found-literal offset)
+                                                                 (cond
+                                                                  ((eq (caar stream) 'open-xml-tag-start-stmt)
+                                                                   'inside-open-xml-tag)
+                                                                  ((and (> (length stream) 1)
+                                                                        (equal (mapcar #'car (cl-subseq stream 0 2))
+                                                                               '(expression-start-stmt open-xml-tag-start-stmt)))
+                                                                   'inside-open-xml-tag)
+                                                                  (t 'generic))))
                                 '(quote-stmt . inside-string)
-                                '(close-quote-stmt . generic)
+                                (cons 'close-quote-stmt (lambda (stream found-literal offset)
+                                                          (cond
+                                                           ((eq (caar stream) 'open-xml-tag-start-stmt)
+                                                            'inside-open-xml-tag)
+                                                           ((and (> (length stream) 1)
+                                                                 (equal (mapcar #'car (cl-subseq stream 0 2))
+                                                                        '(expression-start-stmt open-xml-tag-start-stmt)))
+                                                            'inside-open-xml-tag)
+                                                           (t 'generic))))
                                 '(open-xml-tag-start-stmt . inside-open-xml-tag)
                                 '(open-xml-tag-stmt . inside-xml-tag)
-                                '(close-xml-tag-stmt . generic)
+                                (cons 'close-xml-tag-stmt (lambda (stream found-literal offset)
+                                                            (cl-case (caar stream)
+                                                              (open-xml-tag-start-stmt 'inside-open-xml-tag)
+                                                              (t 'generic))))
+                                (cons 'self-closing-xml-tag-stmt (lambda (stream found-literal offset)
+                                                                   (cl-case (caar stream)
+                                                                     (open-xml-tag-start-stmt 'inside-open-xml-tag)
+                                                                     (t 'generic))))
                                 '(open-curly-bracket-stmt . generic)
                                 (cons 'close-curly-bracket-stmt (lambda (stream found-literal offset)
                                                                   (cl-case (caar stream)
@@ -569,6 +592,8 @@ START and END are region boundaries."
            (grid (list (cons 'generic
                              (cl-remove-if (lambda (x) (memq x '(close-quote-stmt
                                                                  close-double-quote-stmt
+                                                                 self-closing-xml-tag-end-stmt
+                                                                 open-xml-tag-end-stmt
                                                                  non-blank-stmt)))
                                            (mapcar #'cdr literals)))
                        '(inside-comment
