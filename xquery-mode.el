@@ -647,9 +647,10 @@ START and END are region boundaries."
                                                      "\\|")))
                                  (list name re groups group-lookup)))
                              grid))
-           (re (cadr (assoc 'generic re-table)))
-           (groups (cl-caddr (assoc 'generic re-table)))
-           (group-lookup (cl-cadddr (assoc 'generic re-table)))
+           (read-table 'generic)
+           (re (cadr (assoc read-table re-table)))
+           (groups (cl-caddr (assoc read-table re-table)))
+           (group-lookup (cl-cadddr (assoc read-table re-table)))
            stream
            at-front
            current-indent
@@ -750,7 +751,8 @@ START and END are region boundaries."
                         (setq next-re-key (apply next-re-key stream found-literal offset nil)))
                       (cl-destructuring-bind (next-re-re next-re-groups next-re-lookups)
                           (cdr (assoc next-re-key re-table))
-                        (setq re next-re-re
+                        (setq read-table next-re-key
+                              re next-re-re
                               groups next-re-groups
                               group-lookup next-re-lookups)))))))
           (unless at-front
