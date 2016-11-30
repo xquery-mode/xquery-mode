@@ -576,7 +576,7 @@ START and END are region boundaries."
                        '(inside-double-quoted-string
                          open-curly-bracket-stmt close-double-quote-stmt word-stmt)
                        '(inside-string
-                         open-curly-bracket-stmt close-quote-stmt word-stmt)
+                         close-quote-stmt word-stmt)
                        '(inside-open-xml-tag
                          self-closing-xml-tag-end-stmt open-xml-tag-end-stmt
                          double-quote-stmt quote-stmt colon-stmt word-stmt)
