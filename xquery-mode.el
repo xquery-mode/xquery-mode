@@ -402,12 +402,13 @@ START and END are region boundaries."
                        ("\\<catch\\>" . catch-stmt)
                        ("\\<element\\>" . element-stmt)
                        ("\\$[[:alnum:]-_.:/@]*[[:alnum:]]" . var-stmt)
-                       ("[[:alnum:]-_.:/@]*[[:alnum:]]" . word-stmt)))
+                       ("[[:alnum:]-_.:/@]*[[:alnum:]]" . word-stmt)
+                       ("[^[:space:]]" . non-blank-stmt)))
            (expression-lookup-fn (lambda (stream found-literal offset)
                                    (when (memq (caar stream)
                                                '(open-square-bracket-stmt
                                                  assign-stmt where-stmt if-stmt else-stmt
-                                                 default-stmt xml-comment-start-stmt open-xml-tag-start-stmt))
+                                                 default-stmt open-xml-tag-start-stmt))
                                      (list 'expression-start-stmt nil offset))))
            (curly-expression-lookup-fn (lambda (stream found-literal offset)
                                          (when (eq (caar stream)
@@ -417,6 +418,12 @@ START and END are region boundaries."
                                       expression-lookup-fn curly-expression-lookup-fn 'var-stmt)
                                 (list 'word-stmt
                                       expression-lookup-fn curly-expression-lookup-fn 'word-stmt 'element-arg-end-stmt)
+                                (list 'non-blank-stmt
+                                      (lambda (stream found-literal offset)
+                                        (when (eq (caar stream)
+                                                  'xml-comment-start-stmt)
+                                          (list 'expression-start-stmt nil offset)))
+                                      'non-blank-stmt)
                                 '(element-stmt
                                   element-stmt element-arg-stmt)
                                 '(catch-stmt
@@ -552,12 +559,13 @@ START and END are region boundaries."
                                                                     (t 'generic))))))
            (grid (list (cons 'generic
                              (cl-remove-if (lambda (x) (memq x '(close-quote-stmt
-                                                                 close-double-quote-stmt)))
+                                                                 close-double-quote-stmt
+                                                                 non-blank-stmt)))
                                            (mapcar #'cdr literals)))
                        '(inside-comment
-                         comment-end-stmt colon-stmt word-stmt)
+                         comment-end-stmt colon-stmt non-blank-stmt)
                        '(inside-xml-comment
-                         xml-comment-end-stmt word-stmt)
+                         xml-comment-end-stmt non-blank-stmt)
                        '(inside-cdata
                          cdata-end-stmt)
                        '(inside-double-quoted-string
