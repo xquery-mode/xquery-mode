@@ -27,7 +27,7 @@ let $deck1 := <html xmlns="http://www.w3.org/1999/xhtml">
                     <ul>
                       <li>Presentations are HTML documents.</li>
                       <li>Each “slide” is a <code>div</code> with a <code>class</code> of “<code>slide</code>”. (The
-                        title page comes from a <code>div</code> with the class “<code>titlepage</code>”).</li>
+                          title page comes from a <code>div</code> with the class “<code>titlepage</code>”).</li>
                       <li>They're stored in the server with the URI convention <code>/slides/<em>deckname</em>/slides.xml</code>.</li>
                     </ul>
                   </div>
@@ -39,26 +39,26 @@ let $deck1 := <html xmlns="http://www.w3.org/1999/xhtml">
 
                     <ul>
                       <li>“<code>/slides/<em>deckname</em></code>” is redirected to
-                        “<code>/slides/<em>deckname</em>/</code> (this demonstrates redirection and makes relative
-                        URIs on the title page work correctly).
+                          “<code>/slides/<em>deckname</em>/</code> (this demonstrates redirection and makes relative
+                          URIs on the title page work correctly).
                       </li>
                       <li>“<code>/slides/<em>deckname</em>/</code>” shows the title page.
                       </li>
                       <li>“<code>/slides/<em>deckname</em>/<em>nn</em></code>” shows slide “<em>nn</em>” where
-                        “<em>nn</em>” is the decimal slide number (1, 2, 3, …)
+                          “<em>nn</em>” is the decimal slide number (1, 2, 3, …)
                       </li>
                       <li>“<code>/slides/<em>deckname</em>/toc</code>” shows an agenda.</li>
                     </ul>
 
                     <p>Any other URI (e.g., for stylesheets, graphics, scripts, etc.) is assumed to
-                      identify a document in the database and that document is returned if
-                      it exists.</p>
+                       identify a document in the database and that document is returned if
+                       it exists.</p>
 
                     <p>As a convenience, completely unrelated to the rewriter, the server
-                      will search “up” the path for documents. For example, a request for
-                      <code>/slides/deck/background.png</code> will be satisfied by the first of
-                      <code>/slides/deck/background.png</code>, or <code>/slides/background.png</code>,
-                      or <code>/background.png</code> that exists.</p>
+                       will search “up” the path for documents. For example, a request for
+                       <code>/slides/deck/background.png</code> will be satisfied by the first of
+                       <code>/slides/deck/background.png</code>, or <code>/slides/background.png</code>,
+                       or <code>/background.png</code> that exists.</p>
                   </div>
 
                 </body>
@@ -99,7 +99,7 @@ let $deck2 := <html xmlns="http://www.w3.org/1999/xhtml">
                     </ul>
 
                     <p>By placing the options node in its own module, we can be sure that the rewriter
-                      and the endpoint will both use the same <code>request</code> elements.</p>
+                       and the endpoint will both use the same <code>request</code> elements.</p>
                   </div>
 
                   <div class="slide">
@@ -124,10 +124,10 @@ let $deck2 := <html xmlns="http://www.w3.org/1999/xhtml">
                     <ul>
                       <li>Handles redirection</li>
                       <li>Requests for “<code>/slides/<em>deckname</em></code>” are redirected to
-                        “<code>/slides/<em>deckname</em>/</code> in order to make relative URIs behave
-                        in the expected way</li>
+                          “<code>/slides/<em>deckname</em>/</code> in order to make relative URIs behave
+                          in the expected way</li>
                       <li>Requests for “<code>/presentations/<em>deckname</em>…</code>” are redirected to
-                        “<code>/slides/<em>deckname</em>…</code> as another example of redirection
+                          “<code>/slides/<em>deckname</em>…</code> as another example of redirection
                       </li>
                     </ul>
                   </div>

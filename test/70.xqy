@@ -23,7 +23,7 @@ document {
                      functx:pad-string-to-length("'" || $property-name || "',", " ", max((  (string-length($property-name)+4), 25) )+1 ),
                      $value,
                      ")&#10;")
-            (: end code generation block :)
+              (: end code generation block :)
           }
   </module>/text()
 }
