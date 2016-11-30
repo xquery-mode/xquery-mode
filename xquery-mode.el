@@ -6,6 +6,7 @@
 ;; Authors:
 ;;   Suraj Acharya <sacharya@cs.indiana.edu>
 ;;   Michael Blakeley <mike@blakeley.com>
+;;   Artem Malyshev <proofit404@gmail.com>
 ;; URL: https://github.com/xquery-mode/xquery-mode
 ;; Version: 0.1.0
 
