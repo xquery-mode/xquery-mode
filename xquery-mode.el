@@ -426,8 +426,8 @@ START and END are region boundaries."
                                       expression-lookup-fn curly-expression-lookup-fn 'word-stmt 'element-arg-end-stmt)
                                 (list 'non-blank-stmt
                                       (lambda (stream found-literal offset)
-                                        (when (eq (caar stream)
-                                                  'xml-comment-start-stmt)
+                                        (when (memq (caar stream)
+                                                    '(xml-comment-start-stmt open-xml-tag-stmt))
                                           (list 'expression-start-stmt nil offset)))
                                       'non-blank-stmt)
                                 '(element-stmt
@@ -487,6 +487,8 @@ START and END are region boundaries."
                                   expression-end-stmt self-closing-xml-tag-end-stmt)
                                 '(open-xml-tag-end-stmt
                                   expression-end-stmt open-xml-tag-end-stmt)
+                                '(close-xml-tag-stmt
+                                  expression-end-stmt close-xml-tag-stmt)
                                 '(cdata-start-stmt
                                   expression-end-stmt cdata-start-stmt)
                                 '(comma-stmt
@@ -549,9 +551,14 @@ START and END are region boundaries."
                                 '(comment-end-stmt . generic)
                                 '(xml-comment-start-stmt . inside-xml-comment)
                                 (cons 'xml-comment-end-stmt (lambda (stream found-literal offset)
-                                                              (if (eq (caar stream) 'open-xml-tag-stmt)
-                                                                  'inside-xml-tag
-                                                                'generic)))
+                                                              (cond
+                                                               ((eq (caar stream) 'open-xml-tag-stmt)
+                                                                'inside-xml-tag)
+                                                               ((and (> (length stream) 1)
+                                                                     (equal (mapcar #'car (cl-subseq stream 0 2))
+                                                                            '(expression-start-stmt open-xml-tag-stmt)))
+                                                                'inside-xml-tag)
+                                                               (t 'generic))))
                                 '(cdata-start-stmt . inside-cdata)
                                 '(cdata-end-stmt . generic)
                                 '(double-quote-stmt . inside-double-quoted-string)
@@ -577,20 +584,35 @@ START and END are region boundaries."
                                 '(open-xml-tag-start-stmt . inside-open-xml-tag)
                                 '(open-xml-tag-stmt . inside-xml-tag)
                                 (cons 'close-xml-tag-stmt (lambda (stream found-literal offset)
-                                                            (cl-case (caar stream)
-                                                              (open-xml-tag-stmt 'inside-xml-tag)
-                                                              (t 'generic))))
+                                                            (cond
+                                                             ((eq (caar stream) 'open-xml-tag-stmt)
+                                                              'inside-xml-tag)
+                                                             ((and (> (length stream) 1)
+                                                                   (equal (mapcar #'car (cl-subseq stream 0 2))
+                                                                          '(expression-start-stmt open-xml-tag-stmt)))
+                                                              'inside-xml-tag)
+                                                             (t 'generic))))
                                 (cons 'self-closing-xml-tag-stmt (lambda (stream found-literal offset)
-                                                                   (cl-case (caar stream)
-                                                                     (open-xml-tag-stmt 'inside-xml-tag)
-                                                                     (t 'generic))))
+                                                                   (cond
+                                                                    ((eq (caar stream) 'open-xml-tag-stmt)
+                                                                     'inside-xml-tag)
+                                                                    ((and (> (length stream) 1)
+                                                                          (equal (mapcar #'car (cl-subseq stream 0 2))
+                                                                                 '(expression-start-stmt open-xml-tag-stmt)))
+                                                                     'inside-xml-tag)
+                                                                    (t 'generic))))
                                 '(open-curly-bracket-stmt . generic)
                                 (cons 'close-curly-bracket-stmt (lambda (stream found-literal offset)
-                                                                  (cl-case (caar stream)
-                                                                    (open-xml-tag-stmt 'inside-xml-tag)
-                                                                    (double-quote-stmt 'inside-double-quoted-string)
-                                                                    (quote-stmt 'inside-string)
-                                                                    (t 'generic))))))
+                                                                  (cond
+                                                                   ((eq (caar stream) 'open-xml-tag-stmt)
+                                                                    'inside-xml-tag)
+                                                                   ((and (> (length stream) 1)
+                                                                         (equal (mapcar #'car (cl-subseq stream 0 2))
+                                                                                '(expression-start-stmt open-xml-tag-stmt)))
+                                                                    'inside-xml-tag)
+                                                                   ((eq (caar stream) 'double-quote-stmt)
+                                                                    'inside-double-quoted-string)
+                                                                   (t 'generic))))))
            (grid (list (cons 'generic
                              (cl-remove-if (lambda (x) (memq x '(escaped-open-curly-bracket-stmt
                                                                  escaped-close-curly-bracket-stmt
