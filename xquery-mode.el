@@ -551,7 +551,9 @@ START and END are region boundaries."
                                                                     (quote-stmt 'inside-string)
                                                                     (t 'generic))))))
            (grid (list (cons 'generic
-                             (mapcar #'cdr literals))
+                             (cl-remove-if (lambda (x) (memq x '(close-quote-stmt
+                                                                 close-double-quote-stmt)))
+                                           (mapcar #'cdr literals)))
                        '(inside-comment
                          comment-end-stmt colon-stmt word-stmt)
                        '(inside-xml-comment
