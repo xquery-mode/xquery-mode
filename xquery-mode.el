@@ -372,7 +372,7 @@ START and END are region boundaries."
                        ("\\]" . close-square-bracket-stmt)
                        ("(" . open-round-bracket-stmt)
                        (")" . close-round-bracket-stmt)
-                       ("<\\(?:\\?\\)?[^>/ ]+?\\>" . open-xml-tag-start-stmt)
+                       ("<\\(?:\\?\\)?[^>/ ]+\\>" . open-xml-tag-start-stmt)
                        ("\\(?:/\\|\\?\\)>" . self-closing-xml-tag-end-stmt)
                        (">" . open-xml-tag-end-stmt)
                        ("</[^>]+>" . close-xml-tag-stmt)
