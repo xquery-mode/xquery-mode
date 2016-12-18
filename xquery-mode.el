@@ -421,18 +421,21 @@ START and END are region boundaries."
            (for-expression-lookup-fn (lambda (stream found-literal offset)
                                        (when (eq (caar stream) 'for-stmt)
                                          (list 'for-expression-start-stmt nil offset))))
+           (element-arg-lookup-fn (lambda (stream found-literal offset)
+                                    (when (eq (caar stream) 'element-stmt)
+                                      (list 'element-arg-stmt nil offset))))
            (substitutions (list (list 'var-stmt
                                       expression-lookup-fn curly-expression-lookup-fn for-expression-lookup-fn 'var-stmt)
                                 (list 'word-stmt
-                                      expression-lookup-fn curly-expression-lookup-fn 'word-stmt 'element-arg-end-stmt)
+                                      expression-lookup-fn curly-expression-lookup-fn 'word-stmt 'element-end-stmt)
                                 (list 'non-blank-stmt
                                       (lambda (stream found-literal offset)
                                         (when (memq (caar stream)
                                                     '(xml-comment-start-stmt open-xml-tag-stmt))
                                           (list 'expression-start-stmt nil offset)))
                                       'non-blank-stmt)
-                                '(element-stmt
-                                  element-stmt element-arg-stmt)
+                                (list 'open-curly-bracket-stmt
+                                      element-arg-lookup-fn 'open-curly-bracket-stmt)
                                 '(catch-stmt
                                   catch-stmt catch-exception-stmt)
                                 '(function-name-stmt
@@ -452,7 +455,7 @@ START and END are region boundaries."
                                 '(close-square-bracket-stmt
                                   expression-end-stmt close-square-bracket-stmt)
                                 '(close-round-bracket-stmt
-                                  expression-end-stmt close-round-bracket-stmt element-arg-end-stmt element-end-stmt)
+                                  expression-end-stmt close-round-bracket-stmt element-end-stmt)
                                 '(else-stmt
                                   expression-end-stmt else-stmt)
                                 '(else-if-stmt
@@ -503,6 +506,8 @@ START and END are region boundaries."
            (on-close '((expression-start-stmt . expression-stmt)
                        (curly-expression-start-stmt . expression-stmt)
                        (element-stmt . expression-stmt)
+                       (element-arg-stmt . element-arg-offset-stmt)
+                       (element-arg-offset-stmt . expression-stmt)
                        (open-curly-bracket-stmt . expression-stmt)
                        (open-round-bracket-stmt . expression-stmt)
                        ((open-xml-tag-start-stmt open-xml-tag-end-stmt) . open-xml-tag-stmt)
@@ -539,9 +544,10 @@ START and END are region boundaries."
                        (xml-comment-end-stmt xml-comment-start-stmt)
                        (cdata-end-stmt cdata-start-stmt)
                        (glob-stmt catch-exception-stmt)
-                       (expression-stmt return-stmt else-stmt assign-stmt catch-stmt catch-exception-stmt element-stmt element-arg-stmt default-stmt)
+                       (expression-stmt
+                        return-stmt else-stmt assign-stmt catch-stmt catch-exception-stmt
+                        element-stmt element-arg-stmt element-arg-offset-stmt default-stmt)
                        (element-end-stmt element-stmt)
-                       (element-arg-end-stmt element-arg-stmt)
                        (expression-end-stmt expression-start-stmt)
                        (curly-expression-end-stmt curly-expression-start-stmt expression-start-stmt)
                        (for-expression-end-stmt for-expression-start-stmt)
@@ -743,7 +749,9 @@ START and END are region boundaries."
                                            typeswitch-stmt switch-stmt default-stmt
                                            try-stmt catch-stmt))
                     (setq current-indent (+ previous-indent previous-offset xquery-mode-indent-width)))
-                   ((memq previous-token '(expression-start-stmt curly-expression-start-stmt for-expression-start-stmt))
+                   ((memq previous-token '(expression-start-stmt
+                                           curly-expression-start-stmt for-expression-start-stmt
+                                           element-arg-offset-stmt))
                     (setq current-indent (+ previous-indent previous-offset)))
                    ((memq previous-token '(cdata-start-stmt double-quote-stmt quote-stmt))
                     (setq current-indent (current-indentation)))
