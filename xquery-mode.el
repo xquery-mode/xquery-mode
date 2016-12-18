@@ -407,6 +407,7 @@ START and END are region boundaries."
                        ("\\$[[:alnum:]-_.:/@]*[[:alnum:]]" . var-stmt)
                        ("[[:alnum:]-_.:/@]*[[:alnum:]]" . word-stmt)
                        ("[^[:space:]]" . non-blank-stmt)))
+           (search-number 0)
            (expression-lookup-fn (lambda (stream found-literal offset)
                                    (when (memq (caar stream)
                                                '(open-square-bracket-stmt
@@ -415,8 +416,8 @@ START and END are region boundaries."
                                                  return-stmt))
                                      (list 'expression-start-stmt nil offset))))
            (curly-expression-lookup-fn (lambda (stream found-literal offset)
-                                         (when (eq (caar stream)
-                                                   'open-curly-bracket-stmt)
+                                         (when (and (eq (caar stream) 'open-curly-bracket-stmt)
+                                                    (eq (1+ (cl-fourth (car stream))) search-number))
                                            (list 'curly-expression-start-stmt nil offset))))
            (for-expression-lookup-fn (lambda (stream found-literal offset)
                                        (when (eq (caar stream) 'for-stmt)
@@ -693,104 +694,106 @@ START and END are region boundaries."
       (if (eq (forward-line -1) -1)
           (setq current-indent 0)
         (setq current-indent (current-indentation)))
-      (push (list 'buffer-beginning current-indent 0) stream)
+      (push (list 'buffer-beginning current-indent 0 search-number) stream)
       (while (not exit)
         (if (re-search-forward re (min (line-end-position) end) t)
-            (let* ((matched-group (cl-find-if #'match-string-no-properties groups))
-                   (found-literal (cdr (assoc matched-group group-lookup)))
-                   (offset (- (current-column)
-                              (current-indentation)
-                              (length (match-string-no-properties 0))))
-                   (buf (or (delq nil
-                                  (mapcar (lambda (s)
-                                            (if (symbolp s)
-                                                (list s nil offset)
-                                              (apply s stream found-literal offset nil)))
-                                          (cdr (assoc found-literal substitutions))))
-                            (list (list found-literal nil offset)))))
-              (while (memq (caar buf) implicit-statements)
-                (let ((token (car (pop buf))))
-                  (when (and (memq token closing)
-                             (memq (caar stream)
-                                   (cdr (assoc token opposite))))
-                    (let* ((closed (car (pop stream)))
-                           (trigger (cdr (cl-assoc
-                                          (list closed token)
-                                          on-close
-                                          :test (lambda (item s) (if (consp s) (equal item s) (eq (car item) s)))))))
-                      (when trigger
-                        (push (list trigger nil nil) buf))))))
-              (when at-front
-                (cl-destructuring-bind (previous-token previous-indent previous-offset)
-                    (car stream)
-                  (cond
-                   ;; TODO: Rewrite as nested expression start block.
-                   ((and (eq previous-token 'comment-start-stmt)
-                         (memq (caar buf) '(colon-stmt comment-end-stmt)))
-                    (setq current-indent (+ previous-indent previous-offset 1)))
-                   ((eq previous-token 'comment-start-stmt)
-                    (setq current-indent (+ previous-indent previous-offset 3)))
-                   ((cl-loop for pair in pairs
-                             thereis (and (eq (caar buf) (car pair))
-                                          (memq previous-token (cdr pair))))
-                    (setq current-indent previous-indent))
-                   ((cl-loop for pair in aligned-pairs
-                             thereis (and (eq (caar buf) (car pair))
-                                          (memq previous-token (cdr pair))))
-                    (setq current-indent (+ previous-indent previous-offset)))
-                   ((eq previous-token 'open-round-bracket-stmt)
-                    (setq current-indent (+ previous-indent previous-offset 1)))
-                   ((memq previous-token '(open-curly-bracket-stmt assign-stmt))
-                    (setq current-indent (+ previous-indent xquery-mode-indent-width)))
-                   ((memq previous-token '(open-xml-tag-stmt
-                                           return-stmt if-stmt else-stmt where-stmt let-stmt
-                                           namespace-stmt import-stmt
-                                           function-name-stmt declare-variable-stmt
-                                           typeswitch-stmt switch-stmt default-stmt
-                                           try-stmt catch-stmt))
-                    (setq current-indent (+ previous-indent previous-offset xquery-mode-indent-width)))
-                   ((memq previous-token '(expression-start-stmt
-                                           curly-expression-start-stmt for-expression-start-stmt
-                                           element-arg-offset-stmt))
-                    (setq current-indent (+ previous-indent previous-offset)))
-                   ((memq previous-token '(cdata-start-stmt double-quote-stmt quote-stmt))
-                    (setq current-indent (current-indentation)))
-                   ((eq previous-token 'buffer-beginning)
-                    (setq current-indent previous-indent)))))
-              (setq at-front nil)
-              (while buf
-                (cl-destructuring-bind (buf-token buf-indent buf-offset)
-                    (pop buf)
-                  (when (and (memq buf-token closing)
-                             (memq (caar stream)
-                                   (cdr (assoc buf-token opposite))))
-                    (cl-destructuring-bind (closed-token closed-indent closed-offset)
-                        (pop stream)
-                      (let ((trigger (cdr (cl-assoc
-                                           (list closed-token buf-token)
-                                           on-close
-                                           :test (lambda (item s) (if (consp s) (equal item s) (eq (car item) s)))))))
+            (progn
+              (cl-incf search-number)
+              (let* ((matched-group (cl-find-if #'match-string-no-properties groups))
+                     (found-literal (cdr (assoc matched-group group-lookup)))
+                     (offset (- (current-column)
+                                (current-indentation)
+                                (length (match-string-no-properties 0))))
+                     (buf (or (delq nil
+                                    (mapcar (lambda (s)
+                                              (if (symbolp s)
+                                                  (list s nil offset)
+                                                (apply s stream found-literal offset nil)))
+                                            (cdr (assoc found-literal substitutions))))
+                              (list (list found-literal nil offset)))))
+                (while (memq (caar buf) implicit-statements)
+                  (let ((token (car (pop buf))))
+                    (when (and (memq token closing)
+                               (memq (caar stream)
+                                     (cdr (assoc token opposite))))
+                      (let* ((closed (car (pop stream)))
+                             (trigger (cdr (cl-assoc
+                                            (list closed token)
+                                            on-close
+                                            :test (lambda (item s) (if (consp s) (equal item s) (eq (car item) s)))))))
                         (when trigger
-                          (let ((trigger-buf (or (delq nil
-                                                       (mapcar (lambda (s)
-                                                                 (if (symbolp s)
-                                                                     (list s closed-indent closed-offset)
-                                                                   (apply s stream trigger closed-offset nil)))
-                                                               (cdr (assoc trigger substitutions))))
-                                                 (list (list trigger closed-indent closed-offset)))))
-                            (setq buf (append trigger-buf buf)))))))
-                  (when (memq buf-token opening)
-                    (push (list buf-token (or buf-indent current-indent) buf-offset) stream))
-                  (let ((next-re-key (cdr (assoc buf-token next-re-table))))
-                    (when next-re-key
-                      (when (functionp next-re-key)
-                        (setq next-re-key (apply next-re-key stream found-literal offset nil)))
-                      (cl-destructuring-bind (next-re-re next-re-groups next-re-lookups)
-                          (cdr (assoc next-re-key re-table))
-                        (setq read-table next-re-key
-                              re next-re-re
-                              groups next-re-groups
-                              group-lookup next-re-lookups)))))))
+                          (push (list trigger nil nil) buf))))))
+                (when at-front
+                  (cl-destructuring-bind (previous-token previous-indent previous-offset previous-search-number)
+                      (car stream)
+                    (cond
+                     ;; TODO: Rewrite as nested expression start block.
+                     ((and (eq previous-token 'comment-start-stmt)
+                           (memq (caar buf) '(colon-stmt comment-end-stmt)))
+                      (setq current-indent (+ previous-indent previous-offset 1)))
+                     ((eq previous-token 'comment-start-stmt)
+                      (setq current-indent (+ previous-indent previous-offset 3)))
+                     ((cl-loop for pair in pairs
+                               thereis (and (eq (caar buf) (car pair))
+                                            (memq previous-token (cdr pair))))
+                      (setq current-indent previous-indent))
+                     ((cl-loop for pair in aligned-pairs
+                               thereis (and (eq (caar buf) (car pair))
+                                            (memq previous-token (cdr pair))))
+                      (setq current-indent (+ previous-indent previous-offset)))
+                     ((eq previous-token 'open-round-bracket-stmt)
+                      (setq current-indent (+ previous-indent previous-offset 1)))
+                     ((memq previous-token '(open-curly-bracket-stmt assign-stmt))
+                      (setq current-indent (+ previous-indent xquery-mode-indent-width)))
+                     ((memq previous-token '(open-xml-tag-stmt
+                                             return-stmt if-stmt else-stmt where-stmt let-stmt
+                                             namespace-stmt import-stmt
+                                             function-name-stmt declare-variable-stmt
+                                             typeswitch-stmt switch-stmt default-stmt
+                                             try-stmt catch-stmt))
+                      (setq current-indent (+ previous-indent previous-offset xquery-mode-indent-width)))
+                     ((memq previous-token '(expression-start-stmt
+                                             curly-expression-start-stmt for-expression-start-stmt
+                                             element-arg-offset-stmt))
+                      (setq current-indent (+ previous-indent previous-offset)))
+                     ((memq previous-token '(cdata-start-stmt double-quote-stmt quote-stmt))
+                      (setq current-indent (current-indentation)))
+                     ((eq previous-token 'buffer-beginning)
+                      (setq current-indent previous-indent)))))
+                (setq at-front nil)
+                (while buf
+                  (cl-destructuring-bind (buf-token buf-indent buf-offset)
+                      (pop buf)
+                    (when (and (memq buf-token closing)
+                               (memq (caar stream)
+                                     (cdr (assoc buf-token opposite))))
+                      (cl-destructuring-bind (closed-token closed-indent closed-offset closed-search-number)
+                          (pop stream)
+                        (let ((trigger (cdr (cl-assoc
+                                             (list closed-token buf-token)
+                                             on-close
+                                             :test (lambda (item s) (if (consp s) (equal item s) (eq (car item) s)))))))
+                          (when trigger
+                            (let ((trigger-buf (or (delq nil
+                                                         (mapcar (lambda (s)
+                                                                   (if (symbolp s)
+                                                                       (list s closed-indent closed-offset)
+                                                                     (apply s stream trigger closed-offset nil)))
+                                                                 (cdr (assoc trigger substitutions))))
+                                                   (list (list trigger closed-indent closed-offset)))))
+                              (setq buf (append trigger-buf buf)))))))
+                    (when (memq buf-token opening)
+                      (push (list buf-token (or buf-indent current-indent) buf-offset search-number) stream))
+                    (let ((next-re-key (cdr (assoc buf-token next-re-table))))
+                      (when next-re-key
+                        (when (functionp next-re-key)
+                          (setq next-re-key (apply next-re-key stream found-literal offset nil)))
+                        (cl-destructuring-bind (next-re-re next-re-groups next-re-lookups)
+                            (cdr (assoc next-re-key re-table))
+                          (setq read-table next-re-key
+                                re next-re-re
+                                groups next-re-groups
+                                group-lookup next-re-lookups))))))))
           (unless at-front
             (setq end (+ end (- current-indent (current-indentation))))
             (indent-line-to current-indent))
