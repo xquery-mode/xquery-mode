@@ -12,11 +12,11 @@ declare function lwcc:extract-bu-documents-277($tx as node(),$tx-path as xs:stri
                  { $billing-hl }
                  {
                    element { name($subscriber-patient) }
-                   {
-                     $subscriber-patient/@*,
-                     $subscriber-patient/LOOP2100D,
-                     $bu
-                   }
+                           {
+                             $subscriber-patient/@*,
+                             $subscriber-patient/LOOP2100D,
+                             $bu
+                           }
                  }
                </business-unit>
 
