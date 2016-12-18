@@ -74,6 +74,57 @@
         a d]]></a>
 " (buffer-substring-no-properties (point-min) (point-max))))))
 
+(ert-deftest test-xquery-mode-comment-or-uncomment-region ()
+  "Comment and uncomment region should work predictable."
+  (with-current-buffer (generate-new-buffer "*fixture-comment-or-uncomment-region*")
+    (insert "$fn(.)")
+    (xquery-mode)
+    (comment-or-uncomment-region (point-min) (point-max))
+    (should (string= "(: $fn(.) :)" (buffer-substring-no-properties (point-min) (point-max))))
+    (comment-or-uncomment-region (point-min) (point-max))
+    (should (string= "$fn(.)" (buffer-substring-no-properties (point-min) (point-max))))))
+
+(ert-deftest test-xquery-mode-comment-or-uncomment-region-multi-line ()
+  "Comment and uncomment region should work predictable."
+  (with-current-buffer (generate-new-buffer "*fixture-comment-or-uncomment-region*")
+    (insert "
+declare function northwind:extract-array(
+  $path-to-property as item()*,
+  $fn as function(*)
+) as json:array?
+{
+  if (empty($path-to-property))
+  then ()
+  else json:to-array($path-to-property ! $fn(.))
+};
+")
+    (xquery-mode)
+    (comment-or-uncomment-region (point-min) (point-max))
+    (should (string= "
+(: \n : declare function northwind:extract-array(
+ :   $path-to-property as item()*,
+ :   $fn as function(*)
+ : ) as json:array?
+ : {
+ :   if (empty($path-to-property))
+ :   then ()
+ :   else json:to-array($path-to-property ! $fn(.))
+ : };
+ :)
+" (buffer-substring-no-properties (point-min) (point-max))))
+    (comment-or-uncomment-region (point-min) (point-max))
+    (should (string= "
+declare function northwind:extract-array(
+  $path-to-property as item()*,
+  $fn as function(*)
+) as json:array?
+{
+  if (empty($path-to-property))
+  then ()
+  else json:to-array($path-to-property ! $fn(.))
+};
+" (buffer-substring-no-properties (point-min) (point-max))))))
+
 (provide 'xquery-mode-test)
 
 ;;; xquery-mode-test.el ends here

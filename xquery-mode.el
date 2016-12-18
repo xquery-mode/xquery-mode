@@ -111,18 +111,6 @@
 (defvar xquery-mode-keywords ()
   "Keywords for xquery-mode.")
 
-(defvar xquery-mode-comment-start "(: "
-  "String used to start an XQuery mode comment.")
-
-(defvar xquery-mode-comment-end " :)"
-  "String used to end an XQuery mode comment.")
-
-(defvar xquery-mode-comment-fill ":"
-  "String used to fill an XQuery mode comment.")
-
-(defvar xquery-mode-comment-start-skip "(:\\s-+"
-  "Regexp to match an XQuery mode comment and any following whitespace.")
-
 ;;;###autoload
 (define-derived-mode xquery-mode fundamental-mode "XQuery"
   "A major mode for W3C XQuery 1.0"
@@ -136,10 +124,9 @@
   (xquery-mode-activate-indent-style)
   ;; apparently it's important to set at least an empty list up-front
   (set (make-local-variable 'font-lock-defaults) '((nil)))
-  (set (make-local-variable 'comment-start) xquery-mode-comment-start)
-  (set (make-local-variable 'comment-end) xquery-mode-comment-end)
-  (set (make-local-variable 'comment-fill)  xquery-mode-comment-fill)
-  (set (make-local-variable 'comment-start-skip) xquery-mode-comment-start-skip))
+  (set (make-local-variable 'comment-start) "(:")
+  (set (make-local-variable 'comment-end) ":)")
+  (set (make-local-variable 'comment-style) 'extra-line))
 
 ;; TODO: move it upper.
 (defcustom xquery-mode-indent-style 'tab-to-tab
