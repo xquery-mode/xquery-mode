@@ -33,12 +33,14 @@
   (with-current-buffer (generate-new-buffer "*fixture-buffer-part*")
     (insert "
   return
+
 <tr>")
     (goto-char (point-min))
     (xquery-mode)
-    (indent-region 11 15)
+    (indent-region 12 16)
     (should (string= "
   return
+
     <tr>" (buffer-substring-no-properties (point-min) (point-max))))))
 
 (ert-deftest test-xquery-mode-indent-line-part ()

@@ -673,15 +673,12 @@ START and END are region boundaries."
            (re (cadr (assoc read-table re-table)))
            (groups (cl-caddr (assoc read-table re-table)))
            (group-lookup (cl-cadddr (assoc read-table re-table)))
+           (current-indent 0)
+           (at-front t)
            stream
-           at-front
-           current-indent
            exit)
-      (goto-char start)
-      (if (eq (forward-line -1) -1)
-          (setq current-indent 0)
-        (setq current-indent (current-indentation)))
-      (push (list 'buffer-beginning current-indent 0 search-number) stream)
+      (goto-char (point-min))
+      (push (list 'buffer-beginning 0 0 0) stream)
       (while (not exit)
         (if (re-search-forward re (min (line-end-position) end) t)
             (progn
@@ -714,6 +711,8 @@ START and END are region boundaries."
                   (cl-destructuring-bind (previous-token previous-indent previous-offset previous-search-number)
                       (car stream)
                     (cond
+                     ((< (point) start)
+                      (setq current-indent (current-indentation)))
                      ;; TODO: Rewrite as nested expression start block.
                      ((and (eq previous-token 'comment-start-stmt)
                            (memq (caar buf) '(colon-stmt comment-end-stmt)))
