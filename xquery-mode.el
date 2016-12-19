@@ -336,7 +336,9 @@ otherwise."
   "Indent current line as xquery code."
   (xquery-mode-indent-region
    (line-beginning-position)
-   (line-end-position)))
+   (line-end-position))
+  (when (< (current-column) (current-indentation))
+    (back-to-indentation)))
 
 (defun xquery-mode-indent-region (start end)
   "Indent given region.
