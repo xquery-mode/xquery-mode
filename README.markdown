@@ -1,10 +1,23 @@
 # xquery-mode
 
+This is a fork of the original xquery-mode.
+
 ## Indentation
 
-This mode support smart indentation based on syntax analysis.
+Indentation engine was fully re-engineered.  Current implementation
+includes syntax analyzer which can indent line or region based on
+context.
 
-Like any approach it have issues.  There some of them
+To enable this feature please add following lines to your config:
+
+```elisp
+(setq xquery-mode-indent-style 'native)
+```
+
+To indent current line please press `TAB`.  To indent whole buffer
+please press `C-x h TAB`.
+
+Like any approach it has issues.  There some of them
 
 #### Tabs
 
