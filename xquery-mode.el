@@ -9,6 +9,7 @@
 ;;   Artem Malyshev <proofit404@gmail.com>
 ;; URL: https://github.com/xquery-mode/xquery-mode
 ;; Version: 0.1.0
+;; Package-Requires: ((cl-lib "0.5"))
 
 ;; This file is not part of GNU Emacs.
 
