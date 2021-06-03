@@ -33,8 +33,6 @@
 ;;; Code:
 
 ;; TODO: 'if()' is highlighted as a function
-;; TODO: requiring nxml-mode excludes XEmacs - just for colors?
-;; TODO: test using featurep 'xemacs
 ;; TODO use nxml for element completion?
 
 (require 'cl-lib)
