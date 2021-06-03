@@ -33,8 +33,6 @@
 ;;; Code:
 
 ;; TODO: 'if()' is highlighted as a function
-;; TODO: requiring nxml-mode excludes XEmacs - just for colors?
-;; TODO: test using featurep 'xemacs
 ;; TODO use nxml for element completion?
 
 (require 'cl-lib)
@@ -316,7 +314,7 @@
     (1 font-lock-keyword-face))))
 
 ;;;###autoload
-(add-to-list 'auto-mode-alist '(".xq[erxy]\\'" . xquery-mode))
+(add-to-list 'auto-mode-alist '("\\.\\(?:xquery\\|xq[elmry]?\\)\\'" . xquery-mode))
 
 (defun xquery-forward-sexp (&optional arg)
   "XQuery forward s-expresssion.
