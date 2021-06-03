@@ -314,7 +314,7 @@
     (1 font-lock-keyword-face))))
 
 ;;;###autoload
-(add-to-list 'auto-mode-alist '(".xq[erxy]\\'" . xquery-mode))
+(add-to-list 'auto-mode-alist '("\\.\\(?:xquery\\|xq[elmry]?\\)\\'" . xquery-mode))
 
 (defun xquery-forward-sexp (&optional arg)
   "XQuery forward s-expresssion.
